@@ -40,3 +40,5 @@ next-env.d.ts
 public/uploads/documents/documente-management/ROF_CNS_2024_2025.pdf
 public/uploads/documents/documente-management/MulticraftInstaller-2.5.0.exe
 *.exe
+.vercel
+.env*.local

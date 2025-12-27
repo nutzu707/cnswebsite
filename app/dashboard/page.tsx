@@ -6,6 +6,7 @@ import {Button} from "@/components/ui/button";
 import Footer from "@/app/components/footer/footer";
 import {promises as fs} from "fs";
 import DocumentsListDash from "@/app/components/displaydocumentsdash/displaydocumentsdash";
+import DocumentsListBlob from "@/app/components/displaydocumentsblob/displaydocumentsblob";
 import CreateProjectJsonFile from "@/app/components/createproject/createproject";
 import CreateConducerePersonJsonFile from "@/app/components/modifyconducere/modifyconducere";
 import CreateConsiliuPersonJsonFile from "@/app/components/modifyconsiliu/modifyconsiliu";
@@ -39,7 +40,14 @@ export default async function Dashboard() {
         }
 
         const data = await file.arrayBuffer();
-        await fs.writeFile(`${process.cwd()}/public/uploads/${collection}/${file.name}`, Buffer.from(data));
+        const uploadPath = `${process.cwd()}/public/uploads/${collection}/${file.name}`;
+        await fs.writeFile(uploadPath, Buffer.from(data));
+        
+        console.log(`File uploaded successfully: ${uploadPath}`);
+        
+        // Trigger revalidation
+        const { revalidatePath } = await import('next/cache');
+        revalidatePath('/dashboard');
 
     }
 
@@ -57,91 +65,26 @@ export default async function Dashboard() {
 
                 <div className="lg:w-[1000px] w-full self-center mt-32 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="management">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">DOCUMENTE MANAGEMENT</p>
-                    <form action={action}>
-                        <div className="flex flex-col lg:flex-row w-full">
-                            <input className=" file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2  file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl " type="file" name="file"/>
-                            <input hidden type="text" name="collection" defaultValue="documents/documente-management" />
-                            <div className=" mr-0  flex ml-auto mt-1 lg:mt-0">
-                                <Button className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8 mr-2 ">Upload</Button>
-                                <RefreshButton/>
-                            </div>
-                        </div>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/documents/documente-management'} />
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <DocumentsListBlob folder="documents/documente-management" />
                 </div>
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="elevi">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">DOCUMENTE ELEVI</p>
-                    <form action={action}>
-                        <div className="flex flex-col lg:flex-row w-full">
-                            <input className=" file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2  file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl " type="file" name="file"/>
-                            <input hidden type="text" name="collection" defaultValue="documents/documente-elevi" />
-                            <div className=" mr-0  flex ml-auto mt-1 lg:mt-0">
-                                <Button className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8 mr-2 ">Upload</Button>
-                                <RefreshButton/>
-                            </div>
-                        </div>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/documents/documente-elevi'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <DocumentsListBlob folder="documents/documente-elevi" />
                 </div>
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="profesori">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">DOCUMENTE PROFESORI</p>
-                    <form action={action}>
-                        <div className="flex flex-col lg:flex-row w-full">
-                            <input className=" file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2  file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl " type="file" name="file"/>
-                            <input hidden type="text" name="collection" defaultValue="documents/documente-profesori" />
-                            <div className=" mr-0  flex ml-auto mt-1 lg:mt-0">
-                                <Button className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8 mr-2 ">Upload</Button>
-                                <RefreshButton/>
-                            </div>
-                        </div>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/documents/documente-profesori'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <DocumentsListBlob folder="documents/documente-profesori" />
                 </div>
 
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="cjex">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CJEX SALAJ</p>
-                    <form action={action}>
-                        <div className="flex flex-col lg:flex-row w-full">
-                            <input className=" file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2  file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl " type="file" name="file"/>
-                            <input hidden type="text" name="collection" defaultValue="documents/cjex-salaj" />
-                            <div className=" mr-0  flex ml-auto mt-1 lg:mt-0">
-                                <Button className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8 mr-2 ">Upload</Button>
-                                <RefreshButton/>
-                            </div>
-                        </div>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/documents/cjex-salaj'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <DocumentsListBlob folder="documents/cjex-salaj" />
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="arhiva-foto">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ARHIVA FOTO</p>
-                    <form action={action}>
-                        <div className="flex flex-col lg:flex-row w-full">
-                            <input accept="image/*" className=" file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2  file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl " type="file" name="file"/>
-                            <input hidden type="text" name="collection" defaultValue="arhiva-foto" />
-                            <div className=" mr-0  flex ml-auto mt-1 lg:mt-0">
-                                <Button className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8 mr-2 ">Upload</Button>
-                                <RefreshButton/>
-                            </div>
-                        </div>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/arhiva-foto'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <DocumentsListBlob folder="arhiva-foto" />
                 </div>
 
 

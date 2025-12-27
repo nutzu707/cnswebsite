@@ -1,56 +1,78 @@
 /* eslint-disable @next/next/no-img-element */
-import fs from 'fs';
-import path from 'path';
+"use client";
+
+import React, { useEffect, useState } from "react";
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import PageBody from "@/app/components/pagebody/pagebody";
 import Footer from "@/app/components/footer/footer";
 
-function shuffleArray(array: string[]): string[] {
-    for (let i = array.length - 1; i > 0; i--) {
+interface BlobFile {
+    filename: string;
+    url: string;
+    uploadedAt: string;
+    size: number;
+    pathname: string;
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return array;
+    return shuffled;
 }
 
-async function getImages() {
-    const imagesFolderPath = path.join(process.cwd(), 'public/uploads/arhiva-foto');
-    const files = await fs.promises.readdir(imagesFolderPath);
+export default function ArhivaPage() {
+    const [images, setImages] = useState<BlobFile[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const imageFiles = files.filter((file) =>
-        /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file)
-    );
+    useEffect(() => {
+        const fetchImages = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(`/api/blob/list?folder=arhiva-foto`);
+                const data = await response.json();
+                const imageFiles = (data.files || []).filter((file: BlobFile) =>
+                    /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.filename)
+                );
+                setImages(shuffleArray(imageFiles));
+            } catch (error) {
+                console.error('Error fetching images:', error);
+                setImages([]);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    return imageFiles;
-}
-
-export default async function ArhivaPage() {
-
-    const images = await getImages();
-
-    const shuffledImages = shuffleArray(images);
+        fetchImages();
+    }, []);
 
     return (
         <div>
             <PageBody>
                 <PageTitle text="ARHIVA FOTO"></PageTitle>
-                <div className="mt-16 lg:mt-24 justify-center " style={{ display: 'flex', flexWrap: 'wrap' }}>
-                    {shuffledImages.map((image, index) => (
-                        <div key={index} style={{ margin: 10 }}>
-                            <a
-                                href={`/assets/arhiva-foto/${image}`}  // Link to the image file
-                                target="_blank"                 // Open in new tab
-                                rel="noopener noreferrer"       // Security best practice
-                            >
-                                <img
-                                    src={`/assets/arhiva-foto/${image}`}
-                                    alt={`image-${index}`}
-                                    className="lg:w-[300px] md:w-[300px] w-full shadow-2xl rounded-xl border-2"
-                                />
-                            </a>
-                        </div>
-                    ))}
-                </div>
+                {loading ? (
+                    <div className="mt-16 lg:mt-24 text-center text-2xl">Loading images...</div>
+                ) : (
+                    <div className="mt-16 lg:mt-24 justify-center " style={{ display: 'flex', flexWrap: 'wrap' }}>
+                        {images.map((image, index) => (
+                            <div key={image.pathname} style={{ margin: 10 }}>
+                                <a
+                                    href={image.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <img
+                                        src={image.url}
+                                        alt={`image-${index}`}
+                                        className="lg:w-[300px] md:w-[300px] w-full shadow-2xl rounded-xl border-2"
+                                    />
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 <Footer />
             </PageBody>
         </div>

@@ -1,10 +1,12 @@
+"use client";
+
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import PageBody from "@/app/components/pagebody/pagebody";
-import DocumentList from "@/app/components/displaydocuments/displaydocuments";
+import DocumentsListBlobPublic from "@/app/components/displaydocumentsblob-public/displaydocumentsblob-public";
 import React from "react";
 import Footer from "@/app/components/footer/footer";
 
-export default async function ManagementDocumente() {
+export default function ManagementDocumente() {
     const currentYear = new Date().getFullYear();
     return (
         <div>
@@ -12,7 +14,7 @@ export default async function ManagementDocumente() {
                 <PageTitle text="DOCUMENTE MANAGEMENT"></PageTitle>
                 <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-2xl p-10 rounded-2xl border-2 ">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">{currentYear}</p>
-                    <DocumentList folderPath="public/uploads/documents/documente-management"></DocumentList>
+                    <DocumentsListBlobPublic folder="documents/documente-management" />
                 </div>
                 <Footer/>
             </PageBody>

@@ -36,7 +36,9 @@ const DocumentList = async ({ folderPath }: DocumentsListProps) => {
                     <li></li>
                 ) : (
                     documentFiles.map((document, index) => {
-                        const documentPath = path.join('assets', 'documents', path.basename(folderPath), document);
+                        // Convert "public/uploads/documents/documente-management" to "/uploads/documents/documente-management"
+                        const relativePath = folderPath.replace(/^public\//, '/');
+                        const documentPath = `${relativePath}/${document}`;
                         const delay = `${index * 40}ms`;
 
                         return (
@@ -44,7 +46,7 @@ const DocumentList = async ({ folderPath }: DocumentsListProps) => {
                                 key={index}
                                 className="animate-fadeIn opacity-0"
                                 style={{ animationDelay: delay }}
-                                href={`/${documentPath}`}
+                                href={documentPath}
                                 target="_blank"
                             >
                                 <hr className="solid border-t-2" />
