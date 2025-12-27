@@ -33,7 +33,6 @@ const Navbar: React.FC = () => {
         { title: "Documente", link: "/management-documente" },
         { title: "Conducere", link: "/conducere" },
         { title: "Consiliu de Administratie", link: "/consiliu-de-administratie" },
-        { title: "Arhiva Foto", link: "/arhiva-foto" },
 
     ];
     const eleviOptions = [
@@ -198,7 +197,6 @@ const Navbar: React.FC = () => {
                                <Link href="/management-documente"><p>Documente</p></Link>
                                <Link href="/conducere"><p>Conducere</p></Link>
                                <Link href="/consiliu-de-administratie"><p>Consiliu de Administratie</p></Link>
-                               <Link href="/arhiva-foto"><p>Arhiva Foto</p></Link>
                             </div>
                         </div>
 

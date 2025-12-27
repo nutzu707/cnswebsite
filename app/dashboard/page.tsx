@@ -82,15 +82,6 @@ export default async function Dashboard() {
                     <DocumentsListBlob folder="documents/cjex-salaj" />
                 </div>
 
-                <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="arhiva-foto">
-                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ARHIVA FOTO</p>
-                    <DocumentsListBlob folder="arhiva-foto" />
-                </div>
-
-
-
-
-
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="anunturi">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ANUNTURI</p>

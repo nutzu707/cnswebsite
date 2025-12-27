@@ -9,7 +9,6 @@ const NavigationButtons = () => {
         { id: "elevi", label: "ELEVI" },
         { id: "profesori", label: "PROFESORI" },
         { id: "cjex", label: "CJEX" },
-        { id: "arhiva-foto", label: "ARHIVA" },
         { id: "anunturi", label: "ANUNTURI" },
         { id: "proiecte", label: "PROIECTE" },
         { id: "conducere", label: "CONDUCERE" },
