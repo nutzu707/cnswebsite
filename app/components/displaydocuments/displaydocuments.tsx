@@ -16,11 +16,15 @@ const DocumentList = async ({ folderPath }: DocumentsListProps) => {
     let documentFiles: string[] = [];
 
     try {
-        const files = await fs.promises.readdir(folderPath);
-
-        documentFiles = files;
+        if (fs.existsSync(folderPath)) {
+            const files = await fs.promises.readdir(folderPath);
+            documentFiles = files;
+        } else {
+            // Folder missing; render empty list without failing build
+            documentFiles = [];
+        }
     } catch (error) {
-        console.error('Error reading documents:', error);
+        // If reading fails, fall back to empty list to keep the page rendering
         documentFiles = [];
     }
 
