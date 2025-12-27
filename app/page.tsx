@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import fs from 'fs';
-import path from 'path';
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import PageBody from "@/app/components/pagebody/pagebody";
 import PageTitle from "@/app/components/pagetitle/pagetitle";
@@ -8,31 +9,32 @@ import NewsBox from "@/app/components/newsbox/newsbox";
 import Footer from "@/app/components/footer/footer";
 import {Button} from "@/components/ui/button";
 
-async function getNewsItems() {
-    const newsDirectory = path.join(process.cwd(), 'public','uploads', 'news');
-
-    const fileNames = fs.readdirSync(newsDirectory);
-
-    const newsItems = fileNames.map((fileName) => {
-        const filePath = path.join(newsDirectory, fileName);
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const jsonData = JSON.parse(fileContent);
-
-        const { title, post_date, thumbnail } = jsonData.article;
-
-        return {
-            title,
-            date: post_date,
-            image: thumbnail,
-            link: `/anunt?id=${fileName.replace('.json', '')}`, // Example link
-        };
-    });
-
-    return newsItems;
+interface NewsItem {
+    title: string;
+    date: string;
+    image: string;
+    link: string;
 }
 
-export default async function Home() {
-    const newsItems = await getNewsItems();
+export default function Home() {
+    const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const response = await fetch("/api/news");
+                const data = await response.json();
+                setNewsItems(data.newsItems || []);
+            } catch (error) {
+                console.error("Error fetching news:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNews();
+    }, []);
 
     return (
         <div>
@@ -62,7 +64,11 @@ export default async function Home() {
 
                 <div id="anunturi"></div>
                 <PageTitle text="ANUNȚURI" />
-                <NewsBox newsItems={newsItems}/>
+                {loading ? (
+                    <div className="text-center mt-16 lg:mt-24 text-2xl">Loading...</div>
+                ) : (
+                    <NewsBox newsItems={newsItems}/>
+                )}
 
                 <Footer />
             </PageBody>
