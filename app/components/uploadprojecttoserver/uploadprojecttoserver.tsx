@@ -1,29 +1,13 @@
 "use server";
 
-import React from "react";
 import {promises as fs} from "fs";
 
-const uploadNewsToServer = (name , filedata) => {
+const uploadProjectToServer = async (name: string, filedata: File) => {
+    console.log(name)
+    console.log(filedata)
 
-
-    async function functie(name, filedata){
-        "use server";
-        console.log(name)
-        console.log(filedata)
-
-
-        const data = await filedata.arrayBuffer();
-        await fs.writeFile(`${process.cwd()}/public/uploads/projects/${name}`, Buffer.from(data));
-
-    }
-    functie(name, filedata);
-
-
-
-
-    return (
-        <div></div>
-    );
+    const data = await filedata.arrayBuffer();
+    await fs.writeFile(`${process.cwd()}/public/uploads/projects/${name}`, Buffer.from(data));
 };
 
-export default uploadNewsToServer;
+export default uploadProjectToServer;
