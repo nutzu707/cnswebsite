@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const NavigationButtons = () => {
-    const sections = [
+    const sections = useMemo(() => [
         { id: "management", label: "MANAGEMENT" },
         { id: "elevi", label: "ELEVI" },
         { id: "profesori", label: "PROFESORI" },
@@ -17,7 +17,7 @@ const NavigationButtons = () => {
         { id: "diriginti", label: "DIRIGINTI" },
         { id: "consiliu-profesoral", label: "CONSILIU PROF" },
         { id: "navbar-links", label: "NAVBAR" },
-    ];
+    ], []);
 
     const [activeSection, setActiveSection] = useState("");
 

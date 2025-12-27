@@ -1,6 +1,8 @@
 "use client"
 
 import React from 'react';
+import Image from "next/image";
+import Link from "next/link";
 import NavbarButton from "@/app/components/navbarbutton/navbarbutton";
 import {Button} from "@/components/ui/button";
 import { useState, useEffect  } from "react";
@@ -90,15 +92,16 @@ const Navbar: React.FC = () => {
             
             <div className=" w-full lg:justify-center items-center flex">
                 <div className="z-50 ">
-                    <a href="/">
-                        <img
+                    <Link href="/">
+                        <Image
                             src="/websiteUI/logo.png"
                             alt="Logo"
+                            width={64}
+                            height={64}
                             className="min-w-10 w-4 p-0 mr-5 -mb-2"
                             style={{ imageRendering: 'crisp-edges' }}
                         />
-
-                    </a>
+                    </Link>
                 </div>
                 <div className="hidden lg:flex">
                     <NavbarButton title="PREZENTARE" link="/prezentare" />
@@ -116,10 +119,12 @@ const Navbar: React.FC = () => {
 
         
                 <div className="ml-auto flex items-center relative group ">
-                    <img
+                    <Image
                         className="w-8 h-5 shadow-2xl rounded-md mt-1.5 ml-2 mr-2 cursor-pointer"
                         src="/websiteUI/Accessibility%20Icon_final.svg"
                         alt="accessibility_icon"
+                        width={32}
+                        height={20}
                     />
                     
                     <div className="absolute top-[27px] right-0 bg-white  hidden group-hover:flex flex-col  shadow-lg p-1 rounded-xl border-2 transition-all duration-75 ease-out transform opacity-0 translate-x-full group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-y-100">
@@ -138,17 +143,21 @@ const Navbar: React.FC = () => {
 
                 </div>
                 <div className="flex items-center relative group bg-none">
-                    <img
+                    <Image
                         className="w-8 h-5 shadow-2xl rounded-md mt-1.5 ml-2 z-30 b mr-2 cursor-pointer border"
                         src="/websiteUI/flag_of_romania.webp"
                         alt="ro_flag"
+                        width={32}
+                        height={20}
                     />
                     <div className="absolute top-3  ml-2 h-10 rounded-md hidden z-10 bg-[#FBFBFB] group-hover:flex flex-col  shadow-lg transition-all duration-75 ease-out transform opacity-0 translate-x-full group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-y-100">
                         <a href="https://cnszalau.ro/hu/" className="mt-auto ">
-                        <img
+                        <Image
                             className="cursor-pointer w-8 h-5 shadow-2xl rounded-md border "
                             src="/websiteUI/Flag-Hungary.png"
                             alt="hu_flag"
+                            width={32}
+                            height={20}
                         />
                         </a>
                     </div>
@@ -164,7 +173,7 @@ const Navbar: React.FC = () => {
                     onClick={toggleMenu}
                     style={{ zIndex: 999 }} // Ensure it stays on top of other content
                 >
-                    <img src="/websiteUI/burger-menu-icon.svg" alt="BurgerIcon" />
+                    <Image src="/websiteUI/burger-menu-icon.svg" alt="BurgerIcon" width={24} height={24} />
                 </button>
                 <div
                     className={`fixed top-0 left-0 w-full flex h-full z-10 bg-white transition-all duration-500 transform ${
@@ -172,7 +181,7 @@ const Navbar: React.FC = () => {
                     }`}
                 >
                     <div className="content-center ml-8 text-3xl font-bold h-full">
-                       <a href="/prezentare"><p>Prezentare</p></a>
+                       <Link href="/prezentare"><p>Prezentare</p></Link>
 
                         <p
                             className="cursor-pointer"
@@ -186,10 +195,10 @@ const Navbar: React.FC = () => {
                             }`}
                         >
                             <div className="text-xl">
-                               <a href="/management-documente"><p>Documente</p></a>
-                               <a href="/conducere"><p>Conducere</p></a>
-                               <a href="/consiliu-de-administratie"><p>Consiliu de Administratie</p></a>
-                               <a href="/arhiva-foto"><p>Arhiva Foto</p></a>
+                               <Link href="/management-documente"><p>Documente</p></Link>
+                               <Link href="/conducere"><p>Conducere</p></Link>
+                               <Link href="/consiliu-de-administratie"><p>Consiliu de Administratie</p></Link>
+                               <Link href="/arhiva-foto"><p>Arhiva Foto</p></Link>
                             </div>
                         </div>
 
@@ -205,10 +214,10 @@ const Navbar: React.FC = () => {
                             }`}
                         >
                             <div className="text-xl">
-                                <a href="/elevi-documente"><p>Documente</p></a>
+                                <Link href="/elevi-documente"><p>Documente</p></Link>
                                 <a href={navbarLinks.orar}><p>Orar</p></a>
                                 <a href={navbarLinks.premii}><p>Premii</p></a>
-                                <a href="/cjex-salaj"><p>CJEX Sălaj</p></a>
+                                <Link href="/cjex-salaj"><p>CJEX Sălaj</p></Link>
                             </div>
                         </div>
 
@@ -224,27 +233,29 @@ const Navbar: React.FC = () => {
                             }`}
                         >
                             <div className="text-xl">
-                                <a href="/profesori-documente"><p>Documente</p></a>
-                                <a href="/consiliu-profesoral"><p>Consiliu Profesoral</p></a>
-                                <a href="/catedre"><p>Catedre</p></a>
-                                <a href="/diriginti"><p>Diriginti</p></a>
+                                <Link href="/profesori-documente"><p>Documente</p></Link>
+                                <Link href="/consiliu-profesoral"><p>Consiliu Profesoral</p></Link>
+                                <Link href="/catedre"><p>Catedre</p></Link>
+                                <Link href="/diriginti"><p>Diriginti</p></Link>
                             </div>
                         </div>
 
-                        <a href="/examene"><p>Examene</p></a>
-                        <a href="/proiecte"><p>Proiecte</p></a>
-                        <a href="/contact"><p>Contact</p></a>
+                        <Link href="/examene"><p>Examene</p></Link>
+                        <Link href="/proiecte"><p>Proiecte</p></Link>
+                        <Link href="/contact"><p>Contact</p></Link>
 
 
 
 
                         <div className="flex mt-2">
 
-                        <img
+                        <Image
                             className="cursor-pointer w-8 h-5 shadow-2xl rounded-md border "
                             onClick={() => toggleSection("steag")}
                             src="/websiteUI/flag_of_romania.webp"
                             alt="ro_flag"
+                            width={32}
+                            height={20}
                         />
 
                         <a href="https://cnszalau.ro/hu/">
@@ -253,10 +264,12 @@ const Navbar: React.FC = () => {
                                 expandedSection === "steag" ? "max-h-[500px]" : "max-h-0"
                             }`}
                         >
-                            <img
+                            <Image
                                 className="cursor-pointer w-8 h-5 shadow-2xl rounded-md border ml-2 "
                                 src="/websiteUI/Flag-Hungary.png"
                                 alt="hu_flag"
+                                width={32}
+                                height={20}
                             />
                         </div>
                         </a>

@@ -1,5 +1,6 @@
 // app/components/documents-list.tsx
 
+/* eslint-disable @next/next/no-img-element */
 import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';

@@ -1,5 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import fs from 'fs';
 import path from 'path';
+import Link from "next/link";
 import PageBody from "@/app/components/pagebody/pagebody";
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import NewsBox from "@/app/components/newsbox/newsbox";
@@ -48,9 +50,9 @@ export default async function Home() {
                                 Performanță și excelență prin integrarea tradiției în modernitate!
 
                             </h1>
-                            <a href="/prezentare" className="self-center">
+                            <Link href="/prezentare" className="self-center">
                                 <Button className="text-xl rounded-md shadow-xl bg-indigo-900 text-white border-2 border-solid hover:bg-indigo-950 font-bold mt-8">Prezentare</Button>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -68,7 +70,7 @@ export default async function Home() {
               <div className="hidden">
                     <div>
                         <div>
-                        <a className="hidden" href="https://mapmyvisitors.com/web/1bwqe"  title="Visit tracker"><img src="https://mapmyvisitors.com/map.png?d=jy7RLJNYyh74_lCX7eiKSRvlgJ7ePOm44yTv9cAMc4U&cl=ffffff" /></a>
+                        <a className="hidden" href="https://mapmyvisitors.com/web/1bwqe"  title="Visit tracker"><img src="https://mapmyvisitors.com/map.png?d=jy7RLJNYyh74_lCX7eiKSRvlgJ7ePOm44yTv9cAMc4U&cl=ffffff" alt="Map visitor tracker" /></a>
                         </div>
                     </div>
                 </div>

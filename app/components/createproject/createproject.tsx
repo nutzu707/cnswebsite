@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
 import uploadnewstoserver from "@/app/components/uploadnewstoserver/uploadnewstoserver";
 import uploadprojecttoserver from "@/app/components/uploadprojecttoserver/uploadprojecttoserver";

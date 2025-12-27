@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from 'react';
 import Uploadconsiliupersontoserver from "@/app/components/uploadconsiliupersontoserver/uploadconsiliupersontoserver";
 import deletePersonFile from "@/app/components/deletepersonfile/deletepersonfile";

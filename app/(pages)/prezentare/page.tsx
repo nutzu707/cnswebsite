@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import PageBody from "@/app/components/pagebody/pagebody";
 import Footer from "@/app/components/footer/footer";

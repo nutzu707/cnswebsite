@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from 'react';
 import Footer from "@/app/components/footer/footer";
 import PageBody from "@/app/components/pagebody/pagebody";
