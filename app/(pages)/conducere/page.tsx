@@ -4,6 +4,10 @@ import PageBody from "@/app/components/pagebody/pagebody";
 import Footer from "@/app/components/footer/footer";
 import fs from 'fs';
 import path from 'path';
+
+// Force dynamic rendering to avoid ISR size limits
+export const dynamic = 'force-dynamic';
+
 export default async function Conducere() {
 
     const directoryPath = path.join(process.cwd(), 'public','uploads', 'conducere');
