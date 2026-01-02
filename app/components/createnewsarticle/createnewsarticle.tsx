@@ -52,7 +52,7 @@ const CreateNews = () => {
 
 
 
-    const generateJson = () => {
+    const generateJson = async () => {
         if (!title || !postDate || !thumbnail) {
             alert('Title, Date, and Thumbnail are mandatory!');
             return;
@@ -66,20 +66,37 @@ const CreateNews = () => {
                 content,
             },
         };
-        const jsonBlob = new Blob([JSON.stringify(jsonObject, null, 2)], {
-            type: 'application/json',
-        });
 
         const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
         const fileName = `${sanitizedTitle || 'untitled'}.json`;
 
-        const url = URL.createObjectURL(jsonBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
+        try {
+            // Upload to blob storage
+            const jsonString = JSON.stringify(jsonObject, null, 2);
+            const jsonBlob = new Blob([jsonString], { type: 'application/json' });
+            
+            const response = await fetch(
+                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=news`,
+                {
+                    method: 'POST',
+                    body: jsonBlob,
+                }
+            );
 
-        uploadnewstoserver(fileName, jsonBlob);
-
+            if (response.ok) {
+                alert('Anunț postat cu succes!');
+                // Reset form
+                setTitle('');
+                setPostDate('');
+                setThumbnail(null);
+                setContent([]);
+            } else {
+                alert('Eroare la postarea anunțului!');
+            }
+        } catch (error) {
+            console.error('Error uploading news:', error);
+            alert('Eroare la postarea anunțului!');
+        }
     };
 
 

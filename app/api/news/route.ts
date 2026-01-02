@@ -1,34 +1,40 @@
-import fs from "fs";
-import path from "path";
+import { list } from '@vercel/blob';
 import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const newsDirectory = path.join(process.cwd(), "public", "uploads", "news");
-        const fileNames = await fs.promises.readdir(newsDirectory);
+        // Get news from blob storage only
+        const { blobs } = await list({
+            prefix: 'news/',
+        });
 
         const newsItems = await Promise.all(
-            fileNames
-                .filter((fileName) => fileName.endsWith(".json"))
-                .map(async (fileName) => {
-                    const filePath = path.join(newsDirectory, fileName);
-                    const fileContent = await fs.promises.readFile(filePath, "utf-8");
-                    const jsonData = JSON.parse(fileContent);
-
+            blobs.map(async (blob) => {
+                try {
+                    const response = await fetch(blob.url);
+                    const jsonData = await response.json();
                     const { title, post_date, thumbnail } = jsonData.article;
+                    const fileName = blob.pathname.split('/').pop() || '';
 
                     return {
                         title,
                         date: post_date,
                         image: thumbnail,
                         link: `/anunt?id=${fileName.replace(".json", "")}`,
+                        url: blob.url,
                     };
-                })
+                } catch (error) {
+                    console.error(`Error parsing news file ${blob.pathname}:`, error);
+                    return null;
+                }
+            })
         );
 
-        return NextResponse.json({ newsItems });
+        const validNewsItems = newsItems.filter(item => item !== null);
+
+        return NextResponse.json({ newsItems: validNewsItems });
     } catch (error) {
-        console.error("Error reading news files:", error);
+        console.error("Error reading news from blob storage:", error);
         return NextResponse.json({ newsItems: [], error: "Failed to read news" }, { status: 500 });
     }
 }

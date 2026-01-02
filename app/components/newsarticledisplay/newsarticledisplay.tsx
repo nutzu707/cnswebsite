@@ -36,7 +36,7 @@ const NewsArticleDisplay = ({ anunt }: { anunt: string }) => {
     useEffect(() => {
         const fetchArticle = async () => {
             try {
-                const response = await fetch(`/assets/news/${anunt}.json`);
+                const response = await fetch(`/api/news/${anunt}`);
                 const data = await response.json();
                 setArticle(data.article);
             } catch (error) {

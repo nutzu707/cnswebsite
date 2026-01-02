@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import fs from 'fs';
-import path from 'path';
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import PageBody from "@/app/components/pagebody/pagebody";
 import Footer from "@/app/components/footer/footer";
@@ -27,25 +27,34 @@ const ensureProtocol = (url: string): string => {
     return url;
 };
 
-export default async function Proiecte() {
+export default function Proiecte() {
+    const [projects, setProjects] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const projectsDirectory = path.join(process.cwd(), 'public','uploads', 'projects');
-    const fileNames = fs.readdirSync(projectsDirectory);
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                setProjects(data.projects || []);
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const projects = await Promise.all(
-        fileNames.map(async (fileName) => {
-            const filePath = path.join(projectsDirectory, fileName);
-            const fileContents = fs.readFileSync(filePath, 'utf8');
-            const projectData = JSON.parse(fileContents);
-            return projectData;
-        })
-    );
+        fetchProjects();
+    }, []);
 
     return (
         <div>
             <PageBody>
                 <PageTitle text="PROIECTE" />
-                <div className="mt-16 lg:mt-24 self-center">
+                {loading ? (
+                    <div className="text-center mt-16 lg:mt-24 text-2xl">Loading projects...</div>
+                ) : (
+                    <div className="mt-16 lg:mt-24 self-center">
                     <div className="space-y-[25px] lg:w-[1000px] w-full">
                         {projects.map((project, index) => {
                             const bgColor = project.project.color; // Background color from JSON
@@ -92,6 +101,7 @@ export default async function Proiecte() {
                         })}
                     </div>
                 </div>
+                )}
                 <Footer />
             </PageBody>
         </div>

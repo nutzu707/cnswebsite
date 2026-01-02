@@ -31,7 +31,7 @@ const CreateProjectJsonFile = () => {
 
 
 
-    const generateJson = () => {
+    const generateJson = async () => {
         if (!title  || !photo) {
             alert('Title and Photo are mandatory!');
             return;
@@ -45,19 +45,37 @@ const CreateProjectJsonFile = () => {
                 color,
             },
         };
-        const jsonBlob = new Blob([JSON.stringify(jsonObject, null, 2)], {
-            type: 'application/json',
-        });
 
         const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
         const fileName = `${sanitizedTitle || 'untitled'}.json`;
 
-        const url = URL.createObjectURL(jsonBlob);
-        const linkElement = document.createElement('a');
-        linkElement.href = url;
-        linkElement.download = fileName;
+        try {
+            // Upload to blob storage
+            const jsonString = JSON.stringify(jsonObject, null, 2);
+            const jsonBlob = new Blob([jsonString], { type: 'application/json' });
+            
+            const response = await fetch(
+                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=projects`,
+                {
+                    method: 'POST',
+                    body: jsonBlob,
+                }
+            );
 
-        uploadprojecttoserver(fileName, jsonBlob);
+            if (response.ok) {
+                alert('Proiect creat cu succes!');
+                // Reset form
+                setTitle('');
+                setPhoto(null);
+                setLink('');
+                setColor('#000000');
+            } else {
+                alert('Eroare la crearea proiectului!');
+            }
+        } catch (error) {
+            console.error('Error uploading project:', error);
+            alert('Eroare la crearea proiectului!');
+        }
     };
 
     return (

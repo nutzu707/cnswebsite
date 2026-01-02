@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import uploadNavbarLinksToServer from "@/app/components/uploadnavbarlinkstoserver/uploadnavbarlinkstoserver";
 
 interface NavbarLinksConfig {
     orar: string;
@@ -14,55 +13,84 @@ const ModifyNavbarLinks = () => {
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        const fetchConfig = async () => {
-            try {
-                const response = await fetch('/assets/uploads/documents/websitedocs/navbar-config.json');
-                if (response.ok) {
-                    const data = await response.json();
-                    setConfig(data);
-                } else {
-                    setConfig({
-                        orar: '/assets/uploads/documents/websitedocs/orar_clase_2024-2025.pdf',
-                        premii: '/assets/uploads/documents/websitedocs/rezultate-cns.pdf'
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading navbar config:', error);
-                setConfig({
-                    orar: '/assets/uploads/documents/websitedocs/orar_clase_2024-2025.pdf',
-                    premii: '/assets/uploads/documents/websitedocs/rezultate-cns.pdf'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchConfig();
     }, []);
 
+    const fetchConfig = async () => {
+        try {
+            const response = await fetch('/api/navbar-links');
+            if (response.ok) {
+                const data = await response.json();
+                setConfig(data);
+            }
+        } catch (error) {
+            console.error('Error loading navbar config:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const saveConfig = async (nextConfig: NavbarLinksConfig) => {
-        const jsonBlob = new Blob([JSON.stringify(nextConfig, null, 2)], {
-            type: 'application/json',
-        });
-        await uploadNavbarLinksToServer('navbar-config.json', jsonBlob);
-        setConfig(nextConfig);
+        try {
+            const jsonBlob = new Blob([JSON.stringify(nextConfig, null, 2)], {
+                type: 'application/json',
+            });
+            
+            const response = await fetch(
+                `/api/blob/upload?filename=${encodeURIComponent('navbar-config.json')}&folder=navbar-links`,
+                {
+                    method: 'POST',
+                    body: jsonBlob,
+                }
+            );
+            
+            if (response.ok) {
+                console.log('Config saved successfully:', nextConfig);
+                setConfig(nextConfig);
+                // Refresh config from server to ensure it's properly saved
+                await fetchConfig();
+            } else {
+                console.error('Failed to save config:', response.status);
+            }
+        } catch (error) {
+            console.error('Error saving config:', error);
+        }
     };
 
     const handleFileUpload = async (field: keyof NavbarLinksConfig, file: File) => {
         try {
             setUploading(true);
             const safeName = file.name.replace(/\s+/g, '_');
-            const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-            await uploadNavbarLinksToServer(safeName, blob);
+            
+            // Upload the file to blob storage
+            const response = await fetch(
+                `/api/blob/upload?filename=${encodeURIComponent(safeName)}&folder=navbar-links`,
+                {
+                    method: 'POST',
+                    body: file,
+                }
+            );
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Upload failed:', response.status, errorText);
+                throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('File uploaded:', result);
+            
+            // Update config with the blob URL
             const nextConfig = {
                 ...config,
-                [field]: `/assets/uploads/documents/websitedocs/${safeName}`,
+                [field]: result.url,
             };
+            console.log('Saving new config:', nextConfig);
             await saveConfig(nextConfig);
             alert('Încărcat și salvat cu succes!');
         } catch (error) {
             console.error('Upload failed', error);
-            alert('Încărcarea a eșuat.');
+            alert(`Încărcarea a eșuat: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setUploading(false);
         }

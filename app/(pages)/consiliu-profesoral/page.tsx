@@ -21,9 +21,9 @@ const ConsiliuProfesoral = () => {
 
     useEffect(() => {
         const fetchProfesori = async () => {
-            const response = await fetch('/assets/uploads/documents/consiliu-profesoral.json');
-            const data: ConsiliuProfesoral = await response.json();
-            setProfesori(data.profesori.content);
+            const response = await fetch('/api/consiliu-profesoral');
+            const data = await response.json();
+            setProfesori(data.profesori || []);
         };
 
         fetchProfesori();

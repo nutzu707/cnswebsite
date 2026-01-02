@@ -9,21 +9,20 @@ import { useState, useEffect  } from "react";
 
 const Navbar: React.FC = () => {
     const [navbarLinks, setNavbarLinks] = useState({
-        orar: "/assets/uploads/documents/websitedocs/orar_clase_2024-2025.pdf",
-        premii: "/assets/uploads/documents/websitedocs/rezultate-cns.pdf"
+        orar: "",
+        premii: ""
     });
 
     useEffect(() => {
         const fetchNavbarConfig = async () => {
             try {
-                const response = await fetch('/assets/uploads/documents/websitedocs/navbar-config.json');
+                const response = await fetch('/api/navbar-links');
                 if (response.ok) {
                     const data = await response.json();
                     setNavbarLinks(data);
                 }
             } catch (error) {
                 console.error('Error loading navbar config:', error);
-                // Keep default values if config doesn't exist
             }
         };
         fetchNavbarConfig();

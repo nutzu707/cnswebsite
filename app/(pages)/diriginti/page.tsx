@@ -22,9 +22,9 @@ const DirigintiPage = () => {
 
     useEffect(() => {
         const fetchDiriginti = async () => {
-            const response = await fetch("/assets/uploads/documents/diriginti.json");
-            const data: DirigintiData = await response.json();
-            setDiriginti(data.diriginti.content);
+            const response = await fetch("/api/diriginti");
+            const data = await response.json();
+            setDiriginti(data.diriginti || []);
         };
 
         fetchDiriginti();

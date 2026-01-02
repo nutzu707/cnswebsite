@@ -8,6 +8,9 @@ import {promises as fs} from "fs";
 import DocumentsListDash from "@/app/components/displaydocumentsdash/displaydocumentsdash";
 import DocumentsListBlob from "@/app/components/displaydocumentsblob/displaydocumentsblob";
 import BlobStorageIndicator from "@/app/components/blobstorageindicator/blobstorageindicator";
+import PersonManager from "@/app/components/personmanager/personmanager";
+import DirigintiManager from "@/app/components/dirigintimanager/dirigintimanager";
+import ConsiliuProfesoralManager from "@/app/components/consiliuprofesoralmanager/consiliuprofesoralmanager";
 import CreateProjectJsonFile from "@/app/components/createproject/createproject";
 import CreateConducerePersonJsonFile from "@/app/components/modifyconducere/modifyconducere";
 import CreateConsiliuPersonJsonFile from "@/app/components/modifyconsiliu/modifyconsiliu";
@@ -90,74 +93,38 @@ export default async function Dashboard() {
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="anunturi">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ANUNTURI</p>
                     <CreateNews/>
-                    <div className="w-full flex justify-end mb-8">
-                        <RefreshButton/>
+                    <div className="h-[300px] overflow-y-scroll pr-5 mt-8">
+                        <DocumentsListBlob folder="news" />
                     </div>
-                    <form action={action}>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/news'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="proiecte">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">PROIECTE</p>
                     <CreateProjectJsonFile/>
-                    <div className="w-full flex justify-end mb-8 mt-8">
-                        <RefreshButton/>
+                    <div className="h-[300px] overflow-y-scroll pr-5 mt-8">
+                        <DocumentsListBlob folder="projects" />
                     </div>
-                    <form action={action}>
-                        <div className="h-[300px] overflow-y-scroll pr-5">
-                            <DocumentsListDash folderPath={'public/uploads/projects'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="conducere">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CONDUCERE</p>
-                    <CreateConducerePersonJsonFile/>
-                    <div className="w-full flex justify-end mb-8 mt-8">
-                        <RefreshButton/>
-                    </div>
-                    <form action={action}>
-                        <div className="h-[300px] overflow-y-scroll pr-5 ">
-                            <DocumentsListDash folderPath={'public/uploads/conducere'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <PersonManager folder="conducere" title="Conducere" />
                 </div>
 
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="consiliu">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CONSILIU DE ADMINISTRATIE</p>
-                    <CreateConsiliuPersonJsonFile/>
-                    <div className="w-full flex justify-end mb-8 mt-8">
-                        <RefreshButton/>
-                    </div>
-                    <form action={action}>
-                        <div className="h-[300px] overflow-y-scroll pr-5 ">
-                            <DocumentsListDash folderPath={'public/uploads/consiliu-de-administratie'}/>
-                            <hr className="solid border-t-2" />
-                        </div>
-                    </form>
+                    <PersonManager folder="consiliu-de-administratie" title="Consiliu de Administratie" />
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="diriginti">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">DIRIGINTI</p>
-                    <ModifyDiriginti/>
-                    <div className="w-full flex justify-end mb-8 mt-8">
-                        <RefreshButton/>
-                    </div>
+                    <DirigintiManager />
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="consiliu-profesoral">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CONSILIU PROFESORAL</p>
-                    <ModifyConsiliuProfesoral/>
-                    <div className="w-full flex justify-end mb-8 mt-8">
-                        <RefreshButton/>
-                    </div>
+                    <ConsiliuProfesoralManager />
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="navbar-links">
