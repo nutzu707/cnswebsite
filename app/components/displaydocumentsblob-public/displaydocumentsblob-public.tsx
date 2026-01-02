@@ -20,6 +20,14 @@ const DocumentsListBlobPublic = ({ folder }: DocumentsListBlobPublicProps) => {
     const [files, setFiles] = useState<BlobFile[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    };
+
     useEffect(() => {
         const fetchFiles = async () => {
             try {
@@ -69,8 +77,11 @@ const DocumentsListBlobPublic = ({ folder }: DocumentsListBlobPublicProps) => {
                                 <hr className="solid border-t-2" />
                                 <div className="flex mt-1 lg:mb-1">
                                     <img className="lg:w-8 w-6 lg:h-8 h-6 mr-2" src="/websiteUI/document-icon.png" alt="icon" />
-                                    <div className="lg:text-2xl text-xl font-bold break-all">
+                                    <div className="lg:text-2xl text-xl font-bold break-all flex-1">
                                         {file.filename}
+                                    </div>
+                                    <div className="text-gray-600 lg:text-lg text-sm self-center mx-4 whitespace-nowrap">
+                                        {formatFileSize(file.size)}
                                     </div>
                                     <SquareArrowRight className="ml-auto self-center min-w-6 text-indigo-900" />
                                 </div>

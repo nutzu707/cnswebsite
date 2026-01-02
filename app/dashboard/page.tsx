@@ -7,6 +7,7 @@ import Footer from "@/app/components/footer/footer";
 import {promises as fs} from "fs";
 import DocumentsListDash from "@/app/components/displaydocumentsdash/displaydocumentsdash";
 import DocumentsListBlob from "@/app/components/displaydocumentsblob/displaydocumentsblob";
+import BlobStorageIndicator from "@/app/components/blobstorageindicator/blobstorageindicator";
 import CreateProjectJsonFile from "@/app/components/createproject/createproject";
 import CreateConducerePersonJsonFile from "@/app/components/modifyconducere/modifyconducere";
 import CreateConsiliuPersonJsonFile from "@/app/components/modifyconsiliu/modifyconsiliu";
@@ -56,6 +57,9 @@ export default async function Dashboard() {
 
             <PageBody>
                 <PageTitle text="DASHBOARD"></PageTitle>
+                
+                <BlobStorageIndicator />
+
                 <div className="h-20 hidden bg-white lg:flex fixed bottom-0 self-center z-50">
                     <div className="flex h-16 rounded-xl border-2 shadow-2xl justify-center items-center px-3">
                         <Navbardashboard/>

@@ -21,6 +21,14 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
     const [uploading, setUploading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+    const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    };
+
     const fetchFiles = async () => {
         try {
             setLoading(true);
@@ -141,12 +149,15 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
                     <ul>
                         {files.map((file, index) => (
                             <li key={file.pathname} className="flex w-full border-t-2 text-2xl">
-                                <div className="w-[500px] break-all content-center">
+                                <div className="flex-1 break-all content-center">
                                     <a href={file.url} target="_blank" rel="noopener noreferrer">
                                         {file.filename}
                                     </a>
                                 </div>
-                                <div className="mr-0 ml-auto content-center py-2">
+                                <div className="content-center px-4 text-gray-600 text-lg whitespace-nowrap">
+                                    {formatFileSize(file.size)}
+                                </div>
+                                <div className="mr-0 content-center py-2">
                                     <Button
                                         onClick={() => handleDelete(file)}
                                         className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-red-200 font-bold"
