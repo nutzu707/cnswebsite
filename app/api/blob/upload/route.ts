@@ -1,4 +1,4 @@
-import { put, list } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -20,21 +20,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         console.log('Uploading to blob:', blobPath);
 
-        // Check if file already exists
-        const { blobs } = await list({
-            prefix: `${folder}/`,
-        });
-
-        const existingFile = blobs.find(blob => blob.pathname === blobPath);
-        
-        if (existingFile) {
-            console.log('File already exists:', blobPath);
-            return NextResponse.json(
-                { error: `File "${filename}" already exists. Please delete the old file first or use a different name.` },
-                { status: 409 } // 409 Conflict
-            );
-        }
-
+        // Upload directly - Vercel Blob will handle duplicates with addRandomSuffix
         const blob = await put(blobPath, request.body, {
             access: 'public',
             addRandomSuffix: false, // Keep exact filename
@@ -43,8 +29,17 @@ export async function POST(request: Request): Promise<NextResponse> {
         console.log('Upload successful:', blob.url);
 
         return NextResponse.json(blob);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error uploading to blob:', error);
+        
+        // Check if it's a blob already exists error
+        if (error.message && error.message.includes('already exists')) {
+            return NextResponse.json(
+                { error: `File "${filename}" already exists. Please delete the old file first or use a different name.` },
+                { status: 409 }
+            );
+        }
+        
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
             { error: 'Failed to upload file', details: errorMessage },

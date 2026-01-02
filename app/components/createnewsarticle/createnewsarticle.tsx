@@ -91,8 +91,14 @@ const CreateNews = () => {
                 setThumbnail(null);
                 setContent([]);
             } else {
-                const errorData = await response.json();
-                alert(errorData.error || 'Eroare la postarea anunțului!');
+                let errorMessage = 'Eroare la postarea anunțului!';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    errorMessage = `Eroare: ${response.status}`;
+                }
+                alert(errorMessage);
             }
         } catch (error) {
             console.error('Error uploading news:', error);

@@ -155,8 +155,14 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
                 resetForm();
                 await fetchPersons();
             } else {
-                const errorData = await response.json();
-                alert(errorData.error || 'Failed to add person!');
+                let errorMessage = 'Failed to add person!';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    errorMessage = `Failed: ${response.status}`;
+                }
+                alert(errorMessage);
             }
         } catch (error) {
             console.error('Error adding person:', error);
