@@ -74,12 +74,15 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
                 if (fileInput) fileInput.value = '';
                 // Refresh the list
                 await fetchFiles();
+                alert('File uploaded successfully!');
             } else {
-                throw new Error('Upload failed');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Upload failed');
             }
         } catch (error) {
             console.error('Error uploading file:', error);
-            alert('Failed to upload file');
+            const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
+            alert(errorMessage);
         } finally {
             setUploading(false);
         }

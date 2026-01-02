@@ -70,11 +70,13 @@ const CreateProjectJsonFile = () => {
                 setLink('');
                 setColor('#000000');
             } else {
-                alert('Eroare la crearea proiectului!');
+                const errorData = await response.json();
+                alert(errorData.error || 'Eroare la crearea proiectului!');
             }
         } catch (error) {
             console.error('Error uploading project:', error);
-            alert('Eroare la crearea proiectului!');
+            const errorMessage = error instanceof Error ? error.message : 'Eroare la crearea proiectului!';
+            alert(errorMessage);
         }
     };
 
