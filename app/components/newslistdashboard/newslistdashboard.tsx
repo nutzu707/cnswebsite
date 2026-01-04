@@ -15,6 +15,14 @@ const NewsListDashboard = () => {
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
     const fetchArticles = async () => {
         try {
             setLoading(true);
@@ -80,8 +88,8 @@ const NewsListDashboard = () => {
                             <li key={index} className="flex w-full border-t-2 text-2xl py-4">
                                 <div className="flex-1 break-all content-center">
                                     <div className="font-bold">{article.title}</div>
-                                    <div className="text-sm text-gray-600">
-                                        {new Date(article.date).toLocaleDateString()}
+                                    <div className="text-sm text-gray-600 font-semibold mt-1">
+                                        {formatDate(article.date)}
                                     </div>
                                 </div>
                                 <div className="flex gap-2 content-center">

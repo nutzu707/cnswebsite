@@ -173,6 +173,7 @@ const CreateNews = () => {
                         className="border-2 p-2 shadow-2xl rounded-md text-center w-[90%]"
                         onChange={(e) => setPostDate(e.target.value)}
                     />
+                    <p className="text-sm text-gray-600 mt-1">Format: DD/MM/YYYY</p>
                 </div>
 
                 {/* Thumbnail */}
