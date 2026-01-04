@@ -86,19 +86,6 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
             return;
         }
 
-        // Check if file already exists
-        const existingFile = files.find(f => f.filename === selectedFile.name);
-        if (existingFile) {
-            alert(`File "${selectedFile.name}" already exists. Please delete the old file first or use a different name.`);
-            return;
-        }
-
-        // Check if enough storage space
-        if (storageUsage && selectedFile.size > storageUsage.availableSize) {
-            alert(`Not enough storage space. File size: ${formatFileSize(selectedFile.size)}, Available: ${formatFileSize(storageUsage.availableSize)}`);
-            return;
-        }
-
         setUploading(true);
         let successCount = 0;
         let errorCount = 0;
@@ -200,9 +187,6 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
             alert(`Failed to delete file: ${errorMessage}`);
         }
     };
-
-    const hasEnoughSpace = !selectedFile || !storageUsage || selectedFile.size <= storageUsage.availableSize;
-    const fileAlreadyExists = selectedFile && files.some(f => f.filename === selectedFile.name);
 
     return (
         <div>
