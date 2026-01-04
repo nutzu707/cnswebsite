@@ -12,6 +12,12 @@ interface BlobFile {
     pathname: string;
 }
 
+interface StorageUsage {
+    totalSize: number;
+    usedSize: number;
+    availableSize: number;
+}
+
 interface DocumentsListBlobProps {
     folder: string;
 }
@@ -37,6 +43,16 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
         return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
+    const fetchStorageUsage = async () => {
+        try {
+            const response = await fetch('/api/blob/usage');
+            const data = await response.json();
+            setStorageUsage(data);
+        } catch (error) {
+            console.error('Error fetching storage usage:', error);
+        }
+    };
+
     const fetchFiles = async () => {
         try {
             setLoading(true);
@@ -53,6 +69,7 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
 
     useEffect(() => {
         fetchFiles();
+        fetchStorageUsage();
     }, [folder]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +94,19 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
         
         if (selectedFiles.length === 0) {
             alert('Please select at least one file');
+            return;
+        }
+
+        // Check if file already exists
+        const existingFile = files.find(f => f.filename === selectedFile.name);
+        if (existingFile) {
+            alert(`File "${selectedFile.name}" already exists. Please delete the old file first or use a different name.`);
+            return;
+        }
+
+        // Check if enough storage space
+        if (storageUsage && selectedFile.size > storageUsage.availableSize) {
+            alert(`Not enough storage space. File size: ${formatFileSize(selectedFile.size)}, Available: ${formatFileSize(storageUsage.availableSize)}`);
             return;
         }
 
@@ -182,6 +212,9 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
         }
     };
 
+    const hasEnoughSpace = !selectedFile || !storageUsage || selectedFile.size <= storageUsage.availableSize;
+    const fileAlreadyExists = selectedFile && files.some(f => f.filename === selectedFile.name);
+
     return (
         <div>
             {/* Upload Form */}
@@ -212,7 +245,10 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
                         </Button>
                         <Button
                             type="button"
-                            onClick={fetchFiles}
+                            onClick={() => {
+                                fetchFiles();
+                                fetchStorageUsage();
+                            }}
                             className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8"
                         >
                             Refresh
