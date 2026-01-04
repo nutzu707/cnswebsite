@@ -6,6 +6,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         const { searchParams } = new URL(request.url);
         const filename = searchParams.get('filename');
         const folder = searchParams.get('folder') || 'documents';
+        const allowOverwrite = searchParams.get('overwrite') === 'true';
 
         if (!filename) {
             return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
@@ -18,13 +19,15 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Create a path with folder structure
         const filePath = `${folder}/${filename}`;
 
-        // Check if file already exists
-        const exists = await fileExistsInR2(filePath);
-        if (exists) {
-            return NextResponse.json(
-                { error: `File "${filename}" already exists. Please delete the old file first or use a different name.` },
-                { status: 409 }
-            );
+        // Check if file already exists (unless overwrite is allowed)
+        if (!allowOverwrite) {
+            const exists = await fileExistsInR2(filePath);
+            if (exists) {
+                return NextResponse.json(
+                    { error: `File "${filename}" already exists. Please delete the old file first or use a different name.` },
+                    { status: 409 }
+                );
+            }
         }
 
         console.log('Uploading to R2:', filePath);

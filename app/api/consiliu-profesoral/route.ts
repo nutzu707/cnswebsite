@@ -1,20 +1,23 @@
-import { list } from '@vercel/blob';
+import { listFromR2 } from '@/lib/r2';
 import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const { blobs } = await list({
-            prefix: 'consiliu-profesoral/',
-        });
+        const files = await listFromR2('consiliu-profesoral/');
 
         const profesori = await Promise.all(
-            blobs.map(async (blob) => {
+            files.map(async (file) => {
                 try {
-                    const response = await fetch(blob.url);
+                    const response = await fetch(file.url);
                     const parsedData = await response.json();
-                    return parsedData.profesor;
+                    return {
+                        ...parsedData.profesor,
+                        filename: file.filename,
+                        url: file.url,
+                        pathname: file.pathname,
+                    };
                 } catch (error) {
-                    console.error(`Error parsing consiliu-profesoral file ${blob.pathname}:`, error);
+                    console.error(`Error parsing consiliu-profesoral file ${file.pathname}:`, error);
                     return null;
                 }
             })
@@ -32,7 +35,7 @@ export async function GET() {
 
         return NextResponse.json({ profesori: validProfesori });
     } catch (error) {
-        console.error("Error reading consiliu-profesoral from blob storage:", error);
+        console.error("Error reading consiliu-profesoral from R2 storage:", error);
         return NextResponse.json({ profesori: [], error: "Failed to read consiliu-profesoral" }, { status: 500 });
     }
 }

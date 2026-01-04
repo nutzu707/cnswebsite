@@ -18,7 +18,9 @@ const CreateNews = () => {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [uploading, setUploading] = useState(false);
 
-    const handleThumbnailChange = (file: File) => {
+    const handleThumbnailChange = (file: File | null) => {
+        if (!file) return;
+        
         setThumbnailFile(file);
         const reader = new FileReader();
         reader.onload = () => {
@@ -216,7 +218,10 @@ const CreateNews = () => {
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => e.target.files && handleThumbnailChange(e.target.files[0])}
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleThumbnailChange(file);
+                        }}
                         className="w-[300px] mt-1 file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2 file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl"
                     />
                     {thumbnailPreview && (
@@ -252,9 +257,10 @@ const CreateNews = () => {
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) =>
-                                        e.target.files && handleContentImageUpload(index, e.target.files[0])
-                                    }
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleContentImageUpload(index, file);
+                                    }}
                                     className="w-[300px] mt-1 file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2 file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl"
                                 />
                                 {item.imageUrl && (

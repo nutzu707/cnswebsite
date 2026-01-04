@@ -52,55 +52,60 @@ export default function Proiecte() {
             <PageBody>
                 <PageTitle text="PROIECTE" />
                 {loading ? (
-                    <div className="text-center mt-16 lg:mt-24 text-2xl">Loading projects...</div>
+                    <div className="mt-16 lg:mt-24 self-center space-y-[25px] lg:w-[1000px] w-full">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="w-full h-[100px] rounded-2xl shadow-2xl bg-gray-300 animate-pulse"></div>
+                        ))}
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="text-center mt-16 lg:mt-24">
+                        <div className="bg-gray-100 border-2 border-gray-300 rounded-2xl p-12 max-w-md mx-auto">
+                            <p className="text-2xl font-bold text-gray-600">Nu există proiecte momentan</p>
+                            <p className="text-gray-500 mt-2">Reveniți mai târziu pentru noutăți!</p>
+                        </div>
+                    </div>
                 ) : (
                     <div className="mt-16 lg:mt-24 self-center">
-                    <div className="space-y-[25px] lg:w-[1000px] w-full">
-                        {projects.map((project, index) => {
-                            const bgColor = project.project.color; // Background color from JSON
-                            const textColor = getContrastingTextColor(bgColor); // Get contrasting text color
-                            const link = ensureProtocol(project.project.link); // Ensure the link has the correct protocol
+                        <div className="space-y-[25px] lg:w-[1000px] w-full">
+                            {projects.map((project, index) => {
+                                const bgColor = project.color; // Background color from JSON
+                                const textColor = getContrastingTextColor(bgColor); // Get contrasting text color
+                                const link = project.link ? ensureProtocol(project.link) : '#'; // Ensure the link has the correct protocol
 
-                            return (
-                                <a
-                                    key={index}
-                                    href={link}
-                                    target="_self"
-                                    rel="noopener noreferrer"
-                                    className={`w-full h-[300px] lg:h-[100px]  lg:flex  cursor-pointer ${textColor}`}
-
-
-                                >
-
-                                        <div className="w-full h-[100px] hover:mb-[20px] items-center hidden lg:flex rounded-2xl shadow-2xl" style={{ backgroundColor: bgColor }}>
+                                return (
+                                    <a
+                                        key={index}
+                                        href={link}
+                                        target={project.link ? "_blank" : "_self"}
+                                        rel="noopener noreferrer"
+                                        className={`w-full h-[300px] lg:h-[100px] lg:flex cursor-pointer ${textColor} transition-all duration-300 hover:scale-[1.02]`}
+                                    >
+                                        <div className="w-full h-[100px] hover:shadow-3xl items-center hidden lg:flex rounded-2xl shadow-2xl transition-all duration-300" style={{ backgroundColor: bgColor }}>
                                             <h1 className="lg:text-5xl text-3xl font-bold lg:ml-10 uppercase">
-                                                {project.project.title}
+                                                {project.title}
                                             </h1>
                                             <img
-                                                src={project.project.photo}
-                                                alt={project.project.title}
-                                                className="lg:h-[95%] h-[100px] lg:ml-auto lg:mr-10"
+                                                src={project.photo}
+                                                alt={project.title}
+                                                className="lg:h-[95%] h-[100px] lg:ml-auto lg:mr-10 object-contain"
                                             />
                                         </div>
 
-                                    <div className="w-full h-[200px] justify-center items-center flex flex-col lg:hidden rounded-2xl shadow-2xl mb-4" style={{ backgroundColor: bgColor }}>
-                                        <h1 className="lg:text-5xl text-3xl  text-center px-4 font-bold lg:ml-10 uppercase">
-                                            {project.project.title}
-                                        </h1>
-                                        <img
-                                            src={project.project.photo}
-                                            alt={project.project.title}
-                                            className="h-[100px]"
-                                        />
-                                    </div>
-
-
-
-                                </a>
-                            );
-                        })}
+                                        <div className="w-full h-[200px] justify-center items-center flex flex-col lg:hidden rounded-2xl shadow-2xl mb-4 transition-all duration-300" style={{ backgroundColor: bgColor }}>
+                                            <h1 className="lg:text-5xl text-3xl text-center px-4 font-bold lg:ml-10 uppercase">
+                                                {project.title}
+                                            </h1>
+                                            <img
+                                                src={project.photo}
+                                                alt={project.title}
+                                                className="h-[100px] object-contain"
+                                            />
+                                        </div>
+                                    </a>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
                 )}
                 <Footer />
             </PageBody>

@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
+import { ArrowUp, ArrowDown, Trash2, Loader2 } from "lucide-react";
 
 interface Person {
     filename: string;
     url: string;
+    pathname: string;
     name: string;
     position: string;
     photo: string;
@@ -16,9 +17,10 @@ interface Person {
 interface PersonManagerProps {
     folder: string;
     title: string;
+    apiEndpoint: string; // e.g., '/api/conducere'
 }
 
-const PersonManager = ({ folder, title }: PersonManagerProps) => {
+const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
     const [persons, setPersons] = useState<Person[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -27,44 +29,26 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
     // Form state
     const [name, setName] = useState("");
     const [position, setPosition] = useState("");
-    const [photo, setPhoto] = useState<string | null>(null);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchPersons = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/blob/list?folder=${encodeURIComponent(folder)}`);
+            const response = await fetch(apiEndpoint);
             const data = await response.json();
             
-            // Parse each person file
-            const personPromises = (data.files || []).map(async (file: any) => {
-                try {
-                    const res = await fetch(file.url);
-                    const json = await res.json();
-                    return {
-                        filename: file.filename,
-                        url: file.url,
-                        pathname: file.pathname,
-                        ...json.person
-                    };
-                } catch (error) {
-                    console.error(`Error parsing ${file.filename}:`, error);
-                    return null;
-                }
-            });
+            // Extract persons from API response
+            const personList = data.people.map((item: any) => ({
+                filename: item.filename,
+                url: item.url,
+                pathname: item.pathname,
+                ...item.person
+            }));
             
-            const allPersons = (await Promise.all(personPromises)).filter(p => p !== null);
-            
-            // Sort by order, then by name
-            allPersons.sort((a, b) => {
-                const aOrder = a.order ?? 999;
-                const bOrder = b.order ?? 999;
-                if (aOrder !== bOrder) return aOrder - bOrder;
-                return a.name.localeCompare(b.name);
-            });
-            
-            setPersons(allPersons);
+            setPersons(personList);
         } catch (error) {
             console.error('Error fetching persons:', error);
         } finally {
@@ -74,71 +58,78 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
 
     useEffect(() => {
         fetchPersons();
-    }, [folder]);
+    }, [apiEndpoint]);
 
     const resetForm = () => {
-        setShowAddForm(false);
-        // Use setTimeout to ensure form is fully unmounted before clearing state
-        setTimeout(() => {
-            setName('');
-            setPosition('');
-            setPhoto(null);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-            setFormKey(prev => prev + 1);
-        }, 0);
+        setName('');
+        setPosition('');
+        setPhotoFile(null);
+        setPhotoPreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+        setFormKey(prev => prev + 1);
     };
 
     const toggleForm = () => {
         if (showAddForm) {
-            // Closing the form - reset everything
             setShowAddForm(false);
-            setTimeout(() => {
-                setName('');
-                setPosition('');
-                setPhoto(null);
-                setFormKey(prev => prev + 1);
-            }, 0);
+            resetForm();
         } else {
-            // Opening the form - ensure clean state
-            setName('');
-            setPosition('');
-            setPhoto(null);
-            setFormKey(prev => prev + 1);
-            // Small delay to ensure state is cleared before showing form
-            setTimeout(() => {
-                setShowAddForm(true);
-            }, 10);
+            resetForm();
+            setShowAddForm(true);
         }
     };
 
     const handlePhotoUpload = (file: File) => {
+        setPhotoFile(file);
         const reader = new FileReader();
         reader.onload = () => {
-            setPhoto(reader.result as string);
+            setPhotoPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
     };
 
     const handleAddPerson = async () => {
-        if (!name || !position || !photo) {
+        if (!name || !position || !photoFile) {
             alert('Name, Position, and Photo are required!');
             return;
         }
 
         setUploading(true);
         try {
+            // First, upload the photo to R2
+            const photoFormData = new FormData();
+            photoFormData.append('file', photoFile);
+            
+            const sanitizedName = name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            const photoFilename = `${sanitizedName}_${Date.now()}.${photoFile.name.split('.').pop()}`;
+            
+            const photoResponse = await fetch(
+                `/api/blob/upload?filename=${encodeURIComponent(photoFilename)}&folder=${encodeURIComponent(folder + '/photos')}`,
+                {
+                    method: 'POST',
+                    body: photoFile,
+                }
+            );
+
+            if (!photoResponse.ok) {
+                throw new Error('Failed to upload photo');
+            }
+
+            const photoData = await photoResponse.json();
+            const photoUrl = photoData.url;
+
+            // Now create the person JSON with the photo URL
             const personData = {
                 person: {
                     name: name.trim(),
                     position: position.trim(),
-                    photo,
+                    photo: photoUrl,
                     order: persons.length
                 }
             };
 
-            const sanitizedName = name.replace(/[^a-zA-Z0-9_\-]/g, '_');
             const fileName = `${sanitizedName}.json`;
             const jsonBlob = new Blob([JSON.stringify(personData, null, 2)], { type: 'application/json' });
 
@@ -152,22 +143,16 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
 
             if (response.ok) {
                 alert('Person added successfully!');
+                setShowAddForm(false);
                 resetForm();
                 await fetchPersons();
             } else {
-                let errorMessage = 'Failed to add person!';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch {
-                    errorMessage = `Failed: ${response.status}`;
-                }
-                alert(errorMessage);
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add person');
             }
         } catch (error) {
             console.error('Error adding person:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Error adding person!';
-            alert(errorMessage);
+            alert(error instanceof Error ? error.message : 'Error adding person!');
         } finally {
             setUploading(false);
         }
@@ -177,12 +162,23 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
         if (!confirm(`Delete ${person.name}?`)) return;
 
         try {
+            // Delete the JSON file
             const response = await fetch(
-                `/api/blob/delete?url=${encodeURIComponent(person.url)}`,
+                `/api/blob/delete?pathname=${encodeURIComponent(person.pathname)}`,
                 { method: 'DELETE' }
             );
 
             if (response.ok) {
+                // Also try to delete the photo if it's stored in R2
+                if (person.photo.includes('r2.dev')) {
+                    const photoPathname = person.photo.split('.dev/')[1];
+                    if (photoPathname) {
+                        await fetch(
+                            `/api/blob/delete?pathname=${encodeURIComponent(photoPathname)}`,
+                            { method: 'DELETE' }
+                        );
+                    }
+                }
                 await fetchPersons();
             } else {
                 alert('Failed to delete person!');
@@ -225,7 +221,7 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
                 };
 
                 // Delete old
-                await fetch(`/api/blob/delete?url=${encodeURIComponent(person.url)}`, { method: 'DELETE' });
+                await fetch(`/api/blob/delete?pathname=${encodeURIComponent(person.pathname)}`, { method: 'DELETE' });
                 
                 // Upload new with updated order
                 const jsonBlob = new Blob([JSON.stringify(personData, null, 2)], { type: 'application/json' });
@@ -247,110 +243,132 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
     };
 
     return (
-        <div>
-            <div className="mb-4">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">{title}</h2>
                 <Button
                     onClick={toggleForm}
-                    className="text-xl rounded-md shadow-xl bg-indigo-900 text-white hover:bg-indigo-950 font-bold"
+                    className="rounded-md shadow-lg bg-indigo-600 text-white hover:bg-indigo-700"
                 >
                     {showAddForm ? 'Cancel' : 'Add Person'}
                 </Button>
             </div>
 
             {showAddForm && (
-                <div key={formKey} className="mb-8 p-6 border-2 rounded-2xl shadow-2xl bg-gray-50">
-                    <h3 className="text-2xl font-bold mb-4">Add New Person</h3>
+                <div key={formKey} className="p-6 border-2 rounded-xl shadow-lg bg-white">
+                    <h3 className="text-xl font-bold mb-6">Add New Person</h3>
                     
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Full Name"
-                        className="w-full p-2 mb-4 border-2 rounded-md"
-                    />
-                    
-                    <input
-                        type="text"
-                        value={position}
-                        onChange={(e) => setPosition(e.target.value)}
-                        placeholder="Position/Title"
-                        className="w-full p-2 mb-4 border-2 rounded-md"
-                    />
-                    
-                    <div className="mb-4">
-                        <label className="block mb-2 font-bold">Photo</label>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => e.target.files && handlePhotoUpload(e.target.files[0])}
-                            className="w-full file:bg-white file:cursor-pointer file:border-gray-300 file:border-2 file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:p-2"
-                        />
-                        {photo && (
-                            <img src={photo} alt="Preview" className="mt-4 w-32 h-32 object-cover rounded-full" />
-                        )}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Full Name</label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Enter full name"
+                                className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Position/Title</label>
+                            <input
+                                type="text"
+                                value={position}
+                                onChange={(e) => setPosition(e.target.value)}
+                                placeholder="Enter position or title"
+                                className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Photo</label>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => e.target.files && handlePhotoUpload(e.target.files[0])}
+                                className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer"
+                            />
+                            {photoPreview && (
+                                <img src={photoPreview} alt="Preview" className="mt-4 w-32 h-32 object-cover rounded-lg shadow-md" />
+                            )}
+                        </div>
                     </div>
                     
                     <Button
                         onClick={handleAddPerson}
                         disabled={uploading}
-                        className="text-xl rounded-md shadow-xl bg-green-600 text-white hover:bg-green-700 font-bold"
+                        className="mt-6 w-full rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 font-medium py-3"
                     >
-                        {uploading ? 'Adding...' : 'Save Person'}
+                        {uploading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
+                                Adding...
+                            </>
+                        ) : (
+                            'Save Person'
+                        )}
                     </Button>
                 </div>
             )}
 
-            <div className="h-[400px] overflow-y-scroll pr-2">
+            <div className="max-h-[500px] overflow-y-auto pr-2 space-y-3">
                 {loading ? (
-                    <div className="text-xl">Loading...</div>
-                ) : persons.length === 0 ? (
-                    <div className="text-xl text-gray-500">No persons added yet</div>
-                ) : (
-                    <div className="space-y-4">
-                        {persons.map((person, index) => (
-                            <div key={person.filename} className="flex items-center gap-4 p-4 border-2 rounded-lg bg-white shadow-md">
-                                <img 
-                                    src={person.photo} 
-                                    alt={person.name}
-                                    className="w-16 h-16 rounded-full object-cover"
-                                />
-                                
-                                <div className="flex-1">
-                                    <p className="font-bold text-lg">{person.name}</p>
-                                    <p className="text-gray-600">{person.position}</p>
-                                </div>
-                                
-                                <div className="flex gap-2">
-                                    <Button
-                                        onClick={() => moveUp(index)}
-                                        disabled={index === 0}
-                                        className="p-2"
-                                        title="Move Up"
-                                    >
-                                        <ArrowUp className="w-5 h-5" />
-                                    </Button>
-                                    
-                                    <Button
-                                        onClick={() => moveDown(index)}
-                                        disabled={index === persons.length - 1}
-                                        className="p-2"
-                                        title="Move Down"
-                                    >
-                                        <ArrowDown className="w-5 h-5" />
-                                    </Button>
-                                    
-                                    <Button
-                                        onClick={() => handleDelete(person)}
-                                        className="p-2 bg-red-600 hover:bg-red-700"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                     </div>
+                ) : persons.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">No persons added yet</div>
+                ) : (
+                    persons.map((person, index) => (
+                        <div key={person.filename} className="flex items-center gap-4 p-4 border-2 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+                            <img 
+                                src={person.photo} 
+                                alt={person.name}
+                                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                            />
+                            
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-lg truncate">{person.name}</p>
+                                <p className="text-gray-600 text-sm truncate">{person.position}</p>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => moveUp(index)}
+                                    disabled={index === 0}
+                                    variant="outline"
+                                    size="icon"
+                                    title="Move Up"
+                                    className="h-9 w-9"
+                                >
+                                    <ArrowUp className="w-4 h-4" />
+                                </Button>
+                                
+                                <Button
+                                    onClick={() => moveDown(index)}
+                                    disabled={index === persons.length - 1}
+                                    variant="outline"
+                                    size="icon"
+                                    title="Move Down"
+                                    className="h-9 w-9"
+                                >
+                                    <ArrowDown className="w-4 h-4" />
+                                </Button>
+                                
+                                <Button
+                                    onClick={() => handleDelete(person)}
+                                    variant="outline"
+                                    size="icon"
+                                    title="Delete"
+                                    className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
         </div>
@@ -358,4 +376,3 @@ const PersonManager = ({ folder, title }: PersonManagerProps) => {
 };
 
 export default PersonManager;
-

@@ -1,20 +1,23 @@
-import { list } from '@vercel/blob';
+import { listFromR2 } from '@/lib/r2';
 import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const { blobs } = await list({
-            prefix: 'diriginti/',
-        });
+        const files = await listFromR2('diriginti/');
 
         const diriginti = await Promise.all(
-            blobs.map(async (blob) => {
+            files.map(async (file) => {
                 try {
-                    const response = await fetch(blob.url);
+                    const response = await fetch(file.url);
                     const parsedData = await response.json();
-                    return parsedData.diriginte;
+                    return {
+                        ...parsedData.diriginte,
+                        filename: file.filename,
+                        url: file.url,
+                        pathname: file.pathname,
+                    };
                 } catch (error) {
-                    console.error(`Error parsing diriginti file ${blob.pathname}:`, error);
+                    console.error(`Error parsing diriginti file ${file.pathname}:`, error);
                     return null;
                 }
             })
@@ -32,7 +35,7 @@ export async function GET() {
 
         return NextResponse.json({ diriginti: validDiriginti });
     } catch (error) {
-        console.error("Error reading diriginti from blob storage:", error);
+        console.error("Error reading diriginti from R2 storage:", error);
         return NextResponse.json({ diriginti: [], error: "Failed to read diriginti" }, { status: 500 });
     }
 }

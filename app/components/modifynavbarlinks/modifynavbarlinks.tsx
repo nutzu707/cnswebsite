@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface NavbarLinksConfig {
     orar: string;
@@ -10,7 +11,7 @@ interface NavbarLinksConfig {
 const ModifyNavbarLinks = () => {
     const [config, setConfig] = useState<NavbarLinksConfig>({ orar: '', premii: '' });
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
+    const [uploading, setUploading] = useState<string | null>(null);
 
     useEffect(() => {
         fetchConfig();
@@ -37,7 +38,7 @@ const ModifyNavbarLinks = () => {
             });
             
             const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent('navbar-config.json')}&folder=navbar-links`,
+                `/api/blob/upload?filename=${encodeURIComponent('navbar-config.json')}&folder=navbar-links&overwrite=true`,
                 {
                     method: 'POST',
                     body: jsonBlob,
@@ -49,22 +50,26 @@ const ModifyNavbarLinks = () => {
                 setConfig(nextConfig);
                 // Refresh config from server to ensure it's properly saved
                 await fetchConfig();
+                return true;
             } else {
-                console.error('Failed to save config:', response.status);
+                const errorData = await response.json();
+                console.error('Failed to save config:', response.status, errorData);
+                throw new Error(errorData.error || 'Failed to save config');
             }
         } catch (error) {
             console.error('Error saving config:', error);
+            throw error;
         }
     };
 
     const handleFileUpload = async (field: keyof NavbarLinksConfig, file: File) => {
         try {
-            setUploading(true);
+            setUploading(field);
             const safeName = file.name.replace(/\s+/g, '_');
             
-            // Upload the file to blob storage
+            // Upload the file to R2 storage (allow overwrite for navbar links)
             const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(safeName)}&folder=navbar-links`,
+                `/api/blob/upload?filename=${encodeURIComponent(safeName)}&folder=navbar-links&overwrite=true`,
                 {
                     method: 'POST',
                     body: file,
@@ -72,66 +77,88 @@ const ModifyNavbarLinks = () => {
             );
             
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Upload failed:', response.status, errorText);
-                throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+                const errorData = await response.json();
+                console.error('Upload failed:', response.status, errorData);
+                throw new Error(errorData.error || `Upload failed: ${response.status}`);
             }
             
             const result = await response.json();
             console.log('File uploaded:', result);
             
-            // Update config with the blob URL
+            // Update config with the R2 URL
             const nextConfig = {
                 ...config,
                 [field]: result.url,
             };
             console.log('Saving new config:', nextConfig);
             await saveConfig(nextConfig);
-            alert('Încărcat și salvat cu succes!');
+            alert('Încărcat și salvat cu succes! Refresh pagina pentru a vedea schimbările.');
         } catch (error) {
             console.error('Upload failed', error);
             alert(`Încărcarea a eșuat: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
-            setUploading(false);
+            setUploading(null);
         }
     };
 
     if (loading) {
-        return <div className="text-center p-4">Se încarcă...</div>;
+        return (
+            <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            </div>
+        );
     }
 
     return (
         <div className="w-full">
-            <div className="rounded-md shadow-2xl border-2 p-4 mb-4">
-                <p className="text-2xl font-bold mb-4">Configurare Linkuri Navbar</p>
+            <div className="rounded-xl shadow-lg border-2 p-6 bg-white">
+                <h2 className="text-2xl font-bold mb-6">Configurare Linkuri Navbar</h2>
                 
                 <div className="space-y-6">
-                    <div>
-                        <label className="block text-lg font-bold mb-2">Orar (încarcă PDF):</label>
+                    <div className="space-y-3">
+                        <label className="block text-lg font-semibold">Orar (încarcă PDF)</label>
                         <input
                             type="file"
                             accept="application/pdf"
-                            disabled={uploading}
+                            disabled={uploading !== null}
                             onChange={(e) => e.target.files && handleFileUpload('orar', e.target.files[0])}
-                            className="w-full mt-1 file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:border-2 file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-md"
+                            className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        <p className="text-sm text-gray-600 mt-2 break-all">
-                            Link curent: {config.orar}
-                        </p>
+                        {uploading === 'orar' && (
+                            <div className="flex items-center gap-2 text-indigo-600">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-sm">Se încarcă...</span>
+                            </div>
+                        )}
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-500 mb-1">Link curent:</p>
+                            <p className="text-sm text-gray-700 break-all font-mono">
+                                {config.orar || '(Niciun link setat)'}
+                            </p>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-lg font-bold mb-2">Premii (încarcă PDF):</label>
+                    <div className="space-y-3">
+                        <label className="block text-lg font-semibold">Premii (încarcă PDF)</label>
                         <input
                             type="file"
                             accept="application/pdf"
-                            disabled={uploading}
+                            disabled={uploading !== null}
                             onChange={(e) => e.target.files && handleFileUpload('premii', e.target.files[0])}
-                            className="w-full mt-1 file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:border-2 file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-md"
+                            className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         />
-                        <p className="text-sm text-gray-600 mt-2 break-all">
-                            Link curent: {config.premii}
-                        </p>
+                        {uploading === 'premii' && (
+                            <div className="flex items-center gap-2 text-indigo-600">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-sm">Se încarcă...</span>
+                            </div>
+                        )}
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-500 mb-1">Link curent:</p>
+                            <p className="text-sm text-gray-700 break-all font-mono">
+                                {config.premii || '(Niciun link setat)'}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

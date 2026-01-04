@@ -9,6 +9,7 @@ interface NewsArticle {
     image: string;
     link: string;
     url: string;
+    pathname?: string;
 }
 
 const NewsListDashboard = () => {
@@ -47,21 +48,29 @@ const NewsListDashboard = () => {
         }
 
         try {
-            // Extract the pathname from the URL to delete
+            // Use pathname if available, otherwise extract from URL
+            const deleteParam = article.pathname 
+                ? `pathname=${encodeURIComponent(article.pathname)}`
+                : `url=${encodeURIComponent(article.url)}`;
+            
+            console.log('Deleting article:', deleteParam);
             const response = await fetch(
-                `/api/blob/delete?url=${encodeURIComponent(article.url)}`,
+                `/api/blob/delete?${deleteParam}`,
                 { method: 'DELETE' }
             );
 
             if (response.ok) {
                 console.log('Delete successful');
                 await fetchArticles();
+                alert('Article deleted successfully!');
             } else {
-                throw new Error('Delete failed');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Delete failed');
             }
         } catch (error) {
             console.error('Error deleting article:', error);
-            alert('Failed to delete article');
+            const errorMessage = error instanceof Error ? error.message : 'Failed to delete article';
+            alert(errorMessage);
         }
     };
 

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
+import { ArrowUp, ArrowDown, Trash2, Loader2 } from "lucide-react";
 
 interface Profesor {
     filename: string;
     url: string;
+    pathname: string;
     nume: string;
     order?: number;
 }
@@ -19,65 +20,13 @@ const ConsiliuProfesoralManager = () => {
     
     const [nume, setNume] = useState("");
     const [uploading, setUploading] = useState(false);
-    const inputRefNume = useRef<HTMLInputElement>(null);
-
-    const resetForm = () => {
-        setShowAddForm(false);
-        setTimeout(() => {
-            setNume('');
-            if (inputRefNume.current) inputRefNume.current.value = '';
-            setFormKey(prev => prev + 1);
-        }, 0);
-    };
-
-    const toggleForm = () => {
-        if (showAddForm) {
-            setShowAddForm(false);
-            setTimeout(() => {
-                setNume('');
-                setFormKey(prev => prev + 1);
-            }, 0);
-        } else {
-            setNume('');
-            setFormKey(prev => prev + 1);
-            setTimeout(() => {
-                setShowAddForm(true);
-            }, 10);
-        }
-    };
 
     const fetchProfesori = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/blob/list?folder=consiliu-profesoral`);
+            const response = await fetch('/api/consiliu-profesoral');
             const data = await response.json();
-            
-            const profesoriPromises = (data.files || []).map(async (file: any) => {
-                try {
-                    const res = await fetch(file.url);
-                    const json = await res.json();
-                    return {
-                        filename: file.filename,
-                        url: file.url,
-                        pathname: file.pathname,
-                        ...json.profesor
-                    };
-                } catch (error) {
-                    console.error(`Error parsing ${file.filename}:`, error);
-                    return null;
-                }
-            });
-            
-            const allProfesori = (await Promise.all(profesoriPromises)).filter(p => p !== null);
-            
-            allProfesori.sort((a, b) => {
-                const aOrder = a.order ?? 999;
-                const bOrder = b.order ?? 999;
-                if (aOrder !== bOrder) return aOrder - bOrder;
-                return a.nume.localeCompare(b.nume);
-            });
-            
-            setProfesori(allProfesori);
+            setProfesori(data.profesori || []);
         } catch (error) {
             console.error('Error fetching profesori:', error);
         } finally {
@@ -88,6 +37,21 @@ const ConsiliuProfesoralManager = () => {
     useEffect(() => {
         fetchProfesori();
     }, []);
+
+    const resetForm = () => {
+        setNume('');
+        setFormKey(prev => prev + 1);
+    };
+
+    const toggleForm = () => {
+        if (showAddForm) {
+            setShowAddForm(false);
+            resetForm();
+        } else {
+            resetForm();
+            setShowAddForm(true);
+        }
+    };
 
     const handleAdd = async () => {
         if (!nume) {
@@ -118,14 +82,16 @@ const ConsiliuProfesoralManager = () => {
 
             if (response.ok) {
                 alert('Profesor added successfully!');
+                setShowAddForm(false);
                 resetForm();
                 await fetchProfesori();
             } else {
-                alert('Failed to add profesor!');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to add profesor');
             }
         } catch (error) {
             console.error('Error adding profesor:', error);
-            alert('Error adding profesor!');
+            alert(error instanceof Error ? error.message : 'Error adding profesor!');
         } finally {
             setUploading(false);
         }
@@ -136,7 +102,7 @@ const ConsiliuProfesoralManager = () => {
 
         try {
             const response = await fetch(
-                `/api/blob/delete?url=${encodeURIComponent(profesor.url)}`,
+                `/api/blob/delete?pathname=${encodeURIComponent(profesor.pathname)}`,
                 { method: 'DELETE' }
             );
 
@@ -175,7 +141,7 @@ const ConsiliuProfesoralManager = () => {
                     }
                 };
 
-                await fetch(`/api/blob/delete?url=${encodeURIComponent(profesor.url)}`, { method: 'DELETE' });
+                await fetch(`/api/blob/delete?pathname=${encodeURIComponent(profesor.pathname)}`, { method: 'DELETE' });
                 
                 const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 return fetch(
@@ -193,79 +159,100 @@ const ConsiliuProfesoralManager = () => {
     };
 
     return (
-        <div>
-            <div className="mb-4">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Consiliu Profesoral</h2>
                 <Button
                     onClick={toggleForm}
-                    className="text-xl rounded-md shadow-xl bg-indigo-900 text-white hover:bg-indigo-950 font-bold"
+                    className="rounded-md shadow-lg bg-indigo-600 text-white hover:bg-indigo-700"
                 >
                     {showAddForm ? 'Cancel' : 'Add Profesor'}
                 </Button>
             </div>
 
             {showAddForm && (
-                <div key={formKey} className="mb-8 p-6 border-2 rounded-2xl shadow-2xl bg-gray-50">
-                    <h3 className="text-2xl font-bold mb-4">Add New Profesor</h3>
+                <div key={formKey} className="p-6 border-2 rounded-xl shadow-lg bg-white">
+                    <h3 className="text-xl font-bold mb-6">Add New Profesor</h3>
                     
-                    <input
-                        ref={inputRefNume}
-                        type="text"
-                        value={nume}
-                        onChange={(e) => setNume(e.target.value)}
-                        placeholder="Nume Complet"
-                        className="w-full p-2 mb-4 border-2 rounded-md"
-                    />
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Nume</label>
+                            <input
+                                type="text"
+                                value={nume}
+                                onChange={(e) => setNume(e.target.value)}
+                                placeholder="Enter name"
+                                className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
                     
                     <Button
                         onClick={handleAdd}
                         disabled={uploading}
-                        className="text-xl rounded-md shadow-xl bg-green-600 text-white hover:bg-green-700 font-bold"
+                        className="mt-6 w-full rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 font-medium py-3"
                     >
-                        {uploading ? 'Adding...' : 'Save Profesor'}
+                        {uploading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
+                                Adding...
+                            </>
+                        ) : (
+                            'Save Profesor'
+                        )}
                     </Button>
                 </div>
             )}
 
-            <div className="h-[400px] overflow-y-scroll pr-2">
+            <div className="max-h-[500px] overflow-y-auto pr-2 space-y-3">
                 {loading ? (
-                    <div className="text-xl">Loading...</div>
-                ) : profesori.length === 0 ? (
-                    <div className="text-xl text-gray-500">No profesori added yet</div>
-                ) : (
-                    <div className="space-y-2">
-                        {profesori.map((profesor, index) => (
-                            <div key={profesor.filename} className="flex items-center gap-4 p-3 border-2 rounded-lg bg-white shadow-md">
-                                <div className="flex-1">
-                                    <p className="font-bold text-lg">{profesor.nume}</p>
-                                </div>
-                                
-                                <div className="flex gap-2">
-                                    <Button
-                                        onClick={() => moveUp(index)}
-                                        disabled={index === 0}
-                                        className="p-2"
-                                    >
-                                        <ArrowUp className="w-5 h-5" />
-                                    </Button>
-                                    
-                                    <Button
-                                        onClick={() => moveDown(index)}
-                                        disabled={index === profesori.length - 1}
-                                        className="p-2"
-                                    >
-                                        <ArrowDown className="w-5 h-5" />
-                                    </Button>
-                                    
-                                    <Button
-                                        onClick={() => handleDelete(profesor)}
-                                        className="p-2 bg-red-600 hover:bg-red-700"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                     </div>
+                ) : profesori.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">No profesori added yet</div>
+                ) : (
+                    profesori.map((profesor, index) => (
+                        <div key={profesor.filename} className="flex items-center gap-4 p-4 border-2 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-lg">{profesor.nume}</p>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => moveUp(index)}
+                                    disabled={index === 0}
+                                    variant="outline"
+                                    size="icon"
+                                    title="Move Up"
+                                    className="h-9 w-9"
+                                >
+                                    <ArrowUp className="w-4 h-4" />
+                                </Button>
+                                
+                                <Button
+                                    onClick={() => moveDown(index)}
+                                    disabled={index === profesori.length - 1}
+                                    variant="outline"
+                                    size="icon"
+                                    title="Move Down"
+                                    className="h-9 w-9"
+                                >
+                                    <ArrowDown className="w-4 h-4" />
+                                </Button>
+                                
+                                <Button
+                                    onClick={() => handleDelete(profesor)}
+                                    variant="outline"
+                                    size="icon"
+                                    title="Delete"
+                                    className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
         </div>
@@ -273,4 +260,3 @@ const ConsiliuProfesoralManager = () => {
 };
 
 export default ConsiliuProfesoralManager;
-

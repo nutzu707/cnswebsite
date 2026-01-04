@@ -36,11 +36,9 @@ const Navbar: React.FC = () => {
     ];
     const eleviOptions = [
         { title: "Documente", link: "/elevi-documente" },
-        { title: "Orar", link: navbarLinks.orar },
-        { title: "Premii", link: navbarLinks.premii },
+        ...(navbarLinks.orar ? [{ title: "Orar", link: navbarLinks.orar }] : []),
+        ...(navbarLinks.premii ? [{ title: "Premii", link: navbarLinks.premii }] : []),
         { title: "CJEX Sălaj", link: "/cjex-salaj" },
-
-
     ];
     const profesoriOptions = [
         { title: "Documente", link: "/profesori-documente" },
@@ -212,8 +210,8 @@ const Navbar: React.FC = () => {
                         >
                             <div className="text-xl">
                                 <Link href="/elevi-documente"><p>Documente</p></Link>
-                                <a href={navbarLinks.orar}><p>Orar</p></a>
-                                <a href={navbarLinks.premii}><p>Premii</p></a>
+                                {navbarLinks.orar && <a href={navbarLinks.orar}><p>Orar</p></a>}
+                                {navbarLinks.premii && <a href={navbarLinks.premii}><p>Premii</p></a>}
                                 <Link href="/cjex-salaj"><p>CJEX Sălaj</p></Link>
                             </div>
                         </div>

@@ -11,6 +11,7 @@ import BlobStorageIndicator from "@/app/components/blobstorageindicator/blobstor
 import PersonManager from "@/app/components/personmanager/personmanager";
 import DirigintiManager from "@/app/components/dirigintimanager/dirigintimanager";
 import ConsiliuProfesoralManager from "@/app/components/consiliuprofesoralmanager/consiliuprofesoralmanager";
+import CatedreManager from "@/app/components/catedremanager/catedremanager";
 import CreateProjectJsonFile from "@/app/components/createproject/createproject";
 import CreateConducerePersonJsonFile from "@/app/components/modifyconducere/modifyconducere";
 import CreateConsiliuPersonJsonFile from "@/app/components/modifyconsiliu/modifyconsiliu";
@@ -18,6 +19,7 @@ import React from "react";
 import RefreshButton from "@/app/components/refreshbutton/refreshbutton";
 import CreateNews from "@/app/components/createnewsarticle/createnewsarticle";
 import NewsListDashboard from "@/app/components/newslistdashboard/newslistdashboard";
+import ProjectsListDashboard from "@/app/components/projectslistdashboard/projectslistdashboard";
 import Navbardashboard from "@/app/components/navbardashboard/navbardashboard";
 import Restartbutton from "@/app/components/restartbutton/restartbutton";
 import ModifyDiriginti from "@/app/components/modifydiriginti/modifydiriginti";
@@ -102,20 +104,20 @@ export default async function Dashboard() {
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="proiecte">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">PROIECTE</p>
                     <CreateProjectJsonFile/>
-                    <div className="h-[300px] overflow-y-scroll pr-5 mt-8">
-                        <DocumentsListBlob folder="projects" />
+                    <div className="mt-8">
+                        <ProjectsListDashboard />
                     </div>
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="conducere">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CONDUCERE</p>
-                    <PersonManager folder="conducere" title="Conducere" />
+                    <PersonManager folder="conducere" title="Conducere" apiEndpoint="/api/conducere" />
                 </div>
 
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="consiliu">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CONSILIU DE ADMINISTRATIE</p>
-                    <PersonManager folder="consiliu-de-administratie" title="Consiliu de Administratie" />
+                    <PersonManager folder="consiliu-de-administratie" title="Consiliu de Administratie" apiEndpoint="/api/consiliu-de-administratie" />
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="diriginti">
@@ -126,6 +128,11 @@ export default async function Dashboard() {
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="consiliu-profesoral">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CONSILIU PROFESORAL</p>
                     <ConsiliuProfesoralManager />
+                </div>
+
+                <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="catedre">
+                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">CATEDRE PHOTOS</p>
+                    <CatedreManager />
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="navbar-links">

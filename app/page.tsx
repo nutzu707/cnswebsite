@@ -40,8 +40,8 @@ export default function Home() {
         <div>
             <PageBody>
             <div className="motion-safe:animate-fadeUp group">
-                    <div className="bg-[url('/websiteUI/schita-liceu-blurred.png')] bg-cover bg-right w-full flex h-[500px] rounded-2xl mt-48 shadow-2xl border-solid border-2 lg:bg-[url('/websiteUI/schita-liceu.png')] ">
-                        <div className="w-full mt-32 justify-center text-center lg:text-left lg:ml-16 lg:w-[470px]">
+                    <div className="bg-[url('/websiteUI/schita-liceu-blurred.png')] bg-cover bg-right w-full flex h-[700px] rounded-2xl mt-48 shadow-2xl border-solid border-2 lg:bg-[url('/websiteUI/schita-liceu.png')] ">
+                        <div className="w-full mt-56 justify-center text-center lg:text-left lg:ml-16 lg:w-[470px]">
                             <h1 className="text-3xl font-bold md:text-5xl">
                                 COLEGIUL NATIONAL
                             </h1>
@@ -50,11 +50,24 @@ export default function Home() {
                             </h1>
                             <h1 className="text-lg font-bold -mt-1 md:text-2xl">
                                 Performanță și excelență prin integrarea tradiției în modernitate!
-
                             </h1>
-                            <Link href="/prezentare" className="self-center">
-                                <Button className="text-xl rounded-md shadow-xl bg-indigo-900 text-white border-2 border-solid hover:bg-indigo-950 font-bold mt-8">Prezentare</Button>
-                            </Link>
+                            <div className="flex flex-col items-center mt-8 lg:items-start lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+                                <Link href="/prezentare" className="self-center lg:self-auto">
+                                    <Button className="text-xl rounded-md shadow-xl bg-indigo-900 text-white border-indigo-800 border-2 border-solid hover:bg-indigo-950 font-bold">Prezentare</Button>
+                                </Link>
+                                <Button
+                                    className="text-xl rounded-md shadow-xl bg-indigo-900 text-white border-indigo-800 border-2 border-solid hover:bg-indigo-950 font-bold"
+                                    onClick={() => {
+                                        const section = document.getElementById("anunturi");
+                                        if (section) {
+                                            section.scrollIntoView({ behavior: "smooth" });
+                                        }
+                                    }}
+                                    type="button"
+                                >
+                                    Anunțuri
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -65,7 +78,26 @@ export default function Home() {
                 <div id="anunturi"></div>
                 <PageTitle text="ANUNȚURI" />
                 {loading ? (
-                    <div className="text-center mt-16 lg:mt-24 text-2xl">Loading...</div>
+                    <div className="self-center pt-16 lg:pt-32 space-y-10">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex flex-col shadow-2xl rounded-2xl w-full lg:w-[1000px] lg:h-[259px] lg:flex-row border-2 border-solid border-gray-200 animate-pulse">
+                                <div className="w-full aspect-[16/9] lg:w-[450px] lg:h-[255px] bg-gray-300 rounded-t-2xl lg:rounded-tr-none lg:rounded-l-2xl"></div>
+                                <div className="w-full lg:w-[550px] flex items-center p-6">
+                                    <div className="w-full space-y-3">
+                                        <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+                                        <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : newsItems.length === 0 ? (
+                    <div className="text-center mt-16 lg:mt-24">
+                        <div className="bg-gray-100 border-2 border-gray-300 rounded-2xl p-12 max-w-md mx-auto">
+                            <p className="text-2xl font-bold text-gray-600">Nu există anunțuri momentan</p>
+                            <p className="text-gray-500 mt-2">Reveniți mai târziu pentru noutăți!</p>
+                        </div>
+                    </div>
                 ) : (
                     <NewsBox newsItems={newsItems}/>
                 )}

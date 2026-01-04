@@ -2,59 +2,71 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
-import uploadnewstoserver from "@/app/components/uploadnewstoserver/uploadnewstoserver";
-import uploadprojecttoserver from "@/app/components/uploadprojecttoserver/uploadprojecttoserver";
 
 const CreateProjectJsonFile = () => {
     const [title, setTitle] = useState('');
-    const [postDate, setPostDate] = useState('');
-    const [photo, setPhoto] = useState<string | null>(null); // New state for photo (thumbnail)
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [link, setLink] = useState('');
-    const [color, setColor] = useState('#000000');    const [content, setContent] = useState<
-        { type: 'paragraph' | 'image'; text?: string; imageData?: string; caption?: string }[]
-    >([]);
+    const [color, setColor] = useState('#4F46E5'); // Default indigo
+    const [uploading, setUploading] = useState(false);
 
-    const handleThumbnailUpload = (file: File) => {
+    const handlePhotoChange = (file: File | null) => {
+        if (!file) return;
+        
+        setPhotoFile(file);
         const reader = new FileReader();
         reader.onload = () => {
-            setPhoto(reader.result as string);
+            setPhotoPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
     };
+
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newTitle = e.target.value.slice(0, 30);
+        const newTitle = e.target.value.slice(0, 50);
         setTitle(newTitle);
     };
-    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setColor(e.target.value);
-    };
 
-
-
-    const generateJson = async () => {
-        if (!title  || !photo) {
-            alert('Title and Photo are mandatory!');
+    const handlePublish = async () => {
+        if (!title || !photoFile) {
+            alert('Titlu și Fotografie sunt obligatorii!');
             return;
         }
 
-        const jsonObject = {
-            project: {
-                title,
-                photo,
-                link,
-                color,
-            },
-        };
-
-        const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
-        const fileName = `${sanitizedTitle || 'untitled'}.json`;
-
+        setUploading(true);
         try {
-            // Upload to blob storage
-            const jsonString = JSON.stringify(jsonObject, null, 2);
-            const jsonBlob = new Blob([jsonString], { type: 'application/json' });
-            
-            const response = await fetch(
+            // Step 1: Upload photo to R2
+            const photoResponse = await fetch(
+                `/api/blob/upload?filename=${encodeURIComponent(photoFile.name)}&folder=projects/photos`,
+                {
+                    method: 'POST',
+                    body: photoFile,
+                }
+            );
+
+            if (!photoResponse.ok) {
+                throw new Error('Failed to upload photo');
+            }
+
+            const photoResult = await photoResponse.json();
+
+            // Step 2: Create project JSON with R2 URL
+            const project = {
+                project: {
+                    title,
+                    photo: photoResult.url, // R2 URL, not base64!
+                    link,
+                    color,
+                },
+            };
+
+            // Step 3: Upload JSON to R2
+            const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            const fileName = `${sanitizedTitle}.json`;
+
+            const jsonBlob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+
+            const jsonResponse = await fetch(
                 `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=projects`,
                 {
                     method: 'POST',
@@ -62,85 +74,101 @@ const CreateProjectJsonFile = () => {
                 }
             );
 
-            if (response.ok) {
+            if (jsonResponse.ok) {
                 alert('Proiect creat cu succes!');
                 // Reset form
                 setTitle('');
-                setPhoto(null);
+                setPhotoFile(null);
+                setPhotoPreview(null);
                 setLink('');
-                setColor('#000000');
+                setColor('#4F46E5');
             } else {
-                let errorMessage = 'Eroare la crearea proiectului!';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch {
-                    errorMessage = `Eroare: ${response.status}`;
-                }
-                alert(errorMessage);
+                const errorData = await jsonResponse.json();
+                alert(errorData.error || 'Eroare la crearea proiectului!');
             }
         } catch (error) {
-            console.error('Error uploading project:', error);
+            console.error('Error creating project:', error);
             const errorMessage = error instanceof Error ? error.message : 'Eroare la crearea proiectului!';
             alert(errorMessage);
+        } finally {
+            setUploading(false);
         }
     };
 
     return (
-        <div className="w-full ">
-            <div className="rounded-md shadow-2xl border-2">
-            <div className="items-center flex flex-col mt-16">
-                <input
-                    type="text"
-                    value={title}
-                    onChange={handleTitleChange}
-                    placeholder="Titlu"
-                    className="border-2 p-1 shadow-2xl rounded-md text-center w-[90%]"
-                />
-            </div>
-
-            <div className="items-center flex flex-col mt-4">
-                <label>Thumbnail</label>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files && handleThumbnailUpload(e.target.files[0])}
-                    className="w-[300px] mt-1 file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2  file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl  "
-                />
-                {photo && (
-                    <div>
-                        <img
-                            src={photo}
-                            alt="Thumbnail Preview"
-                            className="rounded-xl shadow-2xl mt-4 w-[300px] object-cover"
-                        />
-                    </div>
-                )}
-            </div>
-            <div className="items-center flex flex-col mt-4">
-                <input
-                    type="text"
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                    placeholder="Link la proiect"
-                    className="border-2 p-1 shadow-2xl rounded-md text-center my-2 w-[90%]"
-                />
-            </div>
+        <div className="w-full">
+            <div className="rounded-md shadow-2xl border-2 p-4">
+                {/* Title */}
                 <div className="items-center flex flex-col mt-4">
-                <label>Culoare</label>
-                <input
-                    type="color"
-                    value={color}
-                    onChange={handleColorChange}
-                    placeholder="Pick a color"
-                    className="w-20"
-                />
-            </div>
+                    <label className="text-xl font-bold mb-2">Titlu Proiect</label>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={handleTitleChange}
+                        placeholder="Nume proiect (max 50 caractere)"
+                        className="border-2 p-2 shadow-2xl rounded-md text-center w-[90%]"
+                        maxLength={50}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{title.length}/50 caractere</p>
+                </div>
 
+                {/* Photo */}
+                <div className="items-center flex flex-col mt-4">
+                    <label className="text-xl font-bold mb-2">Fotografie Proiect</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePhotoChange(file);
+                        }}
+                        className="w-[300px] mt-1 file:bg-white bg-none file:cursor-pointer file:border-gray-300 file:clear-start file:border-2 file:rounded-md file:hover:bg-gray-200 file:shadow-xl file:text-xl"
+                    />
+                    {photoPreview && (
+                        <div className="mt-4">
+                            <img
+                                src={photoPreview}
+                                alt="Photo Preview"
+                                className="rounded-xl shadow-2xl w-[300px] h-[200px] object-cover"
+                            />
+                        </div>
+                    )}
+                </div>
 
-            <button onClick={generateJson} className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mt-8 p-1 mb-16  mx-auto block px-4">
-                Creeaza proiect
-            </button>
+                {/* Link */}
+                <div className="items-center flex flex-col mt-4">
+                    <label className="text-xl font-bold mb-2">Link (Opțional)</label>
+                    <input
+                        type="text"
+                        value={link}
+                        onChange={(e) => setLink(e.target.value)}
+                        placeholder="https://exemplu.com (opțional)"
+                        className="border-2 p-2 shadow-2xl rounded-md text-center w-[90%]"
+                    />
+                </div>
+
+                {/* Color */}
+                <div className="items-center flex flex-col mt-4">
+                    <label className="text-xl font-bold mb-2">Culoare Accent</label>
+                    <div className="flex items-center gap-4">
+                        <input
+                            type="color"
+                            value={color}
+                            onChange={(e) => setColor(e.target.value)}
+                            className="w-20 h-12 rounded-md cursor-pointer border-2"
+                        />
+                        <span className="text-sm text-gray-600">{color}</span>
+                    </div>
+                </div>
+
+                {/* Publish Button */}
+                <button
+                    onClick={handlePublish}
+                    disabled={uploading}
+                    className="text-xl rounded-lg shadow-xl bg-green-600 text-white border-2 border-solid hover:bg-green-700 font-bold mt-8 p-3 mb-8 mx-auto block px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {uploading ? 'Se creează...' : 'Creează Proiect'}
+                </button>
             </div>
         </div>
     );
