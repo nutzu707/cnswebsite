@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from 'react';
-import uploadnewstoserver from "@/app/components/uploadnewstoserver/uploadnewstoserver";
+import { upload } from '@vercel/blob/client';
 
 const CreateNews = () => {
     const [title, setTitle] = useState('');
@@ -11,6 +11,7 @@ const CreateNews = () => {
     const [content, setContent] = useState<
         { type: 'paragraph' | 'image'; text?: string; imageData?: string; caption?: string }[]
     >([]);
+    const [uploading, setUploading] = useState(false);
 
     const handleThumbnailUpload = (file: File) => {
         const reader = new FileReader();
@@ -70,40 +71,40 @@ const CreateNews = () => {
         const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
         const fileName = `${sanitizedTitle || 'untitled'}.json`;
 
+        setUploading(true);
         try {
-            // Upload to blob storage
+            // Check if file already exists
+            const listResponse = await fetch(`/api/blob/list?folder=news`);
+            const listData = await listResponse.json();
+            const existingFile = listData.files?.find((f: any) => f.filename === fileName);
+            
+            if (existingFile) {
+                alert(`Anunț cu titlul "${title}" există deja. Vă rugăm să folosiți un titlu diferit.`);
+                return;
+            }
+
+            // Upload to blob storage using client-side upload
             const jsonString = JSON.stringify(jsonObject, null, 2);
             const jsonBlob = new Blob([jsonString], { type: 'application/json' });
             
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=news`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            const blob = await upload(`news/${fileName}`, jsonBlob, {
+                access: 'public',
+                handleUploadUrl: '/api/blob/upload-token',
+            });
 
-            if (response.ok) {
-                alert('Anunț postat cu succes!');
-                // Reset form
-                setTitle('');
-                setPostDate('');
-                setThumbnail(null);
-                setContent([]);
-            } else {
-                let errorMessage = 'Eroare la postarea anunțului!';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch {
-                    errorMessage = `Eroare: ${response.status}`;
-                }
-                alert(errorMessage);
-            }
-        } catch (error) {
+            console.log('Upload successful:', blob.url);
+            alert('Anunț postat cu succes!');
+            // Reset form
+            setTitle('');
+            setPostDate('');
+            setThumbnail(null);
+            setContent([]);
+        } catch (error: any) {
             console.error('Error uploading news:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Eroare la postarea anunțului!';
+            const errorMessage = error?.message || 'Eroare la postarea anunțului!';
             alert(errorMessage);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -204,8 +205,12 @@ const CreateNews = () => {
 
                 </div>
                  </div>
-            <button onClick={generateJson} className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mt-8 p-1 mb-16  mx-auto block px-4">
-                Posteaza anunt
+            <button 
+                onClick={generateJson} 
+                disabled={uploading}
+                className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mt-8 p-1 mb-16  mx-auto block px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {uploading ? 'Se încarcă...' : 'Posteaza anunt'}
             </button>
         </div>
     );

@@ -2,15 +2,16 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
-import uploadnewstoserver from "@/app/components/uploadnewstoserver/uploadnewstoserver";
-import uploadprojecttoserver from "@/app/components/uploadprojecttoserver/uploadprojecttoserver";
+import { upload } from '@vercel/blob/client';
 
 const CreateProjectJsonFile = () => {
     const [title, setTitle] = useState('');
     const [postDate, setPostDate] = useState('');
     const [photo, setPhoto] = useState<string | null>(null); // New state for photo (thumbnail)
     const [link, setLink] = useState('');
-    const [color, setColor] = useState('#000000');    const [content, setContent] = useState<
+    const [color, setColor] = useState('#000000');
+    const [uploading, setUploading] = useState(false);
+    const [content, setContent] = useState<
         { type: 'paragraph' | 'image'; text?: string; imageData?: string; caption?: string }[]
     >([]);
 
@@ -49,40 +50,40 @@ const CreateProjectJsonFile = () => {
         const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
         const fileName = `${sanitizedTitle || 'untitled'}.json`;
 
+        setUploading(true);
         try {
-            // Upload to blob storage
+            // Check if file already exists
+            const listResponse = await fetch(`/api/blob/list?folder=projects`);
+            const listData = await listResponse.json();
+            const existingFile = listData.files?.find((f: any) => f.filename === fileName);
+            
+            if (existingFile) {
+                alert(`Proiect cu titlul "${title}" există deja. Vă rugăm să folosiți un titlu diferit.`);
+                return;
+            }
+
+            // Upload to blob storage using client-side upload
             const jsonString = JSON.stringify(jsonObject, null, 2);
             const jsonBlob = new Blob([jsonString], { type: 'application/json' });
             
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=projects`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            const blob = await upload(`projects/${fileName}`, jsonBlob, {
+                access: 'public',
+                handleUploadUrl: '/api/blob/upload-token',
+            });
 
-            if (response.ok) {
-                alert('Proiect creat cu succes!');
-                // Reset form
-                setTitle('');
-                setPhoto(null);
-                setLink('');
-                setColor('#000000');
-            } else {
-                let errorMessage = 'Eroare la crearea proiectului!';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch {
-                    errorMessage = `Eroare: ${response.status}`;
-                }
-                alert(errorMessage);
-            }
-        } catch (error) {
+            console.log('Upload successful:', blob.url);
+            alert('Proiect creat cu succes!');
+            // Reset form
+            setTitle('');
+            setPhoto(null);
+            setLink('');
+            setColor('#000000');
+        } catch (error: any) {
             console.error('Error uploading project:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Eroare la crearea proiectului!';
+            const errorMessage = error?.message || 'Eroare la crearea proiectului!';
             alert(errorMessage);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -138,8 +139,12 @@ const CreateProjectJsonFile = () => {
             </div>
 
 
-            <button onClick={generateJson} className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mt-8 p-1 mb-16  mx-auto block px-4">
-                Creeaza proiect
+            <button 
+                onClick={generateJson} 
+                disabled={uploading}
+                className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mt-8 p-1 mb-16  mx-auto block px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {uploading ? 'Se încarcă...' : 'Creeaza proiect'}
             </button>
             </div>
         </div>
