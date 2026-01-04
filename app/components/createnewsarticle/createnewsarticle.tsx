@@ -83,6 +83,26 @@ const CreateNews = () => {
             return;
         }
 
+        // Validate date format DD/MM/YYYY
+        const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        const match = postDate.match(dateRegex);
+        
+        if (!match) {
+            alert('Please enter a valid date in DD/MM/YYYY format (e.g., 04/01/2026)');
+            return;
+        }
+
+        const [, day, month, year] = match;
+        const dateObj = new Date(`${year}-${month}-${day}`);
+        
+        if (isNaN(dateObj.getTime())) {
+            alert('Please enter a valid date');
+            return;
+        }
+
+        // Convert to ISO format for storage
+        const isoDate = `${year}-${month}-${day}`;
+
         setUploading(true);
         try {
             // Step 1: Upload thumbnail to R2
@@ -104,7 +124,7 @@ const CreateNews = () => {
             const article = {
                 article: {
                     title,
-                    post_date: postDate,
+                    post_date: isoDate, // ISO format (YYYY-MM-DD)
                     thumbnail: thumbnailResult.url, // R2 URL, not base64!
                     content: content.map(item => ({
                         type: item.type,
@@ -168,12 +188,26 @@ const CreateNews = () => {
                 <div className="items-center flex flex-col mt-4">
                     <label className="text-xl font-bold mb-2">Data</label>
                     <input
-                        type="date"
+                        type="text"
                         value={postDate}
+                        placeholder="DD/MM/YYYY"
+                        maxLength={10}
                         className="border-2 p-2 shadow-2xl rounded-md text-center w-[90%]"
-                        onChange={(e) => setPostDate(e.target.value)}
+                        onChange={(e) => {
+                            // Allow only numbers and slashes
+                            let value = e.target.value.replace(/[^0-9/]/g, '');
+                            
+                            // Auto-add slashes
+                            if (value.length === 2 && !value.includes('/')) {
+                                value += '/';
+                            } else if (value.length === 5 && value.split('/').length === 2) {
+                                value += '/';
+                            }
+                            
+                            setPostDate(value);
+                        }}
                     />
-                    <p className="text-sm text-gray-600 mt-1">Format: DD/MM/YYYY</p>
+                    <p className="text-xs text-gray-500 mt-1">Format: DD/MM/YYYY (Exemplu: 04/01/2026)</p>
                 </div>
 
                 {/* Thumbnail */}
