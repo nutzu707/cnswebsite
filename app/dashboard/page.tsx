@@ -17,6 +17,7 @@ import CreateConsiliuPersonJsonFile from "@/app/components/modifyconsiliu/modify
 import React from "react";
 import RefreshButton from "@/app/components/refreshbutton/refreshbutton";
 import CreateNews from "@/app/components/createnewsarticle/createnewsarticle";
+import NewsListDashboard from "@/app/components/newslistdashboard/newslistdashboard";
 import Navbardashboard from "@/app/components/navbardashboard/navbardashboard";
 import Restartbutton from "@/app/components/restartbutton/restartbutton";
 import ModifyDiriginti from "@/app/components/modifydiriginti/modifydiriginti";
@@ -93,8 +94,8 @@ export default async function Dashboard() {
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="anunturi">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ANUNTURI</p>
                     <CreateNews/>
-                    <div className="h-[300px] overflow-y-scroll pr-5 mt-8">
-                        <DocumentsListBlob folder="news" />
+                    <div className="mt-8">
+                        <NewsListDashboard />
                     </div>
                 </div>
 

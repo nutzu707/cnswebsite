@@ -18,8 +18,8 @@ import {ThickArrowLeftIcon} from "@radix-ui/react-icons";
 type ContentItem = {
     type: 'paragraph' | 'image';
     text?: string;
-    url?: string;
-    imageData?: string;
+    imageUrl?: string;
+    imageData?: string; // Legacy support
     caption?: string;
 };
 
@@ -79,10 +79,9 @@ const NewsArticleDisplay = ({ anunt }: { anunt: string }) => {
                                 return (
                                     <div key={index} className="article-image">
                                         <img
-                                            src={item.imageData || item.url} 
+                                            src={item.imageUrl || item.imageData || ''} 
                                             alt={item.caption || `Image ${index}`}
                                             className="mt-4 lg:w-[725px] lg:h-[405px] w-full aspect-[16/9] rounded-xl shadow-xl border-solid object-cover border-2"
-
                                         />
                                         {item.caption && <p className="text-sm font-bold text-gray-500 mt-1">{item.caption}</p>}
                                     </div>
