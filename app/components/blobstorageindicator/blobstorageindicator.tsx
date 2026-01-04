@@ -54,16 +54,14 @@ const BlobStorageIndicator = () => {
         return "bg-red-500";
     };
 
-    const storageLimitMB = usage.storageLimit * 1024; // Convert GB to MB
-
     return (
         <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-6 rounded-2xl border-2 bg-white">
             <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-indigo-900 mb-2">Storage Available</h3>
+                    <h3 className="text-2xl font-bold text-indigo-900 mb-2">R2 Storage Available</h3>
                     <p className="text-lg">
-                        <span className="font-bold">{usage.totalMB.toFixed(2)} MB</span> of{" "}
-                        <span className="font-bold">{storageLimitMB.toFixed(0)} MB</span> used
+                        <span className="font-bold">{usage.totalGB.toFixed(2)} GB</span> of{" "}
+                        <span className="font-bold">{usage.storageLimit.toFixed(0)} GB</span> used
                     </p>
                     <p className="text-md text-gray-600">
                         {usage.filesCount} file{usage.filesCount !== 1 ? 's' : ''} stored

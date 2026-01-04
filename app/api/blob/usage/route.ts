@@ -1,31 +1,32 @@
-import { list } from '@vercel/blob';
+import { getR2Usage } from '@/lib/r2';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
     try {
-        // List all blobs in the store
-        const { blobs } = await list();
+        // Get R2 usage
+        const { totalSize, filesCount } = await getR2Usage();
 
-        // Calculate total size in bytes
-        const totalBytes = blobs.reduce((sum, blob) => sum + blob.size, 0);
+        // Storage limits for R2 (10 GB free tier)
+        const storageLimit = 10 * 1024 * 1024 * 1024; // 10 GB in bytes
+        const availableSize = Math.max(0, storageLimit - totalSize);
 
-        // Convert to GB
-        const totalGB = totalBytes / (1024 * 1024 * 1024);
-
-        // Storage limits based on plan (can be adjusted)
-        const storageLimit = 0.9; // 900 MB = 0.9 GB
-        // Adjust this based on your Vercel plan limits
+        // Convert to different units
+        const totalGB = totalSize / (1024 * 1024 * 1024);
+        const limitGB = storageLimit / (1024 * 1024 * 1024);
 
         return NextResponse.json({
-            totalBytes,
-            totalMB: totalBytes / (1024 * 1024),
+            totalSize: storageLimit,
+            usedSize: totalSize,
+            availableSize: availableSize,
+            totalBytes: totalSize,
+            totalMB: totalSize / (1024 * 1024),
             totalGB,
-            storageLimit,
-            percentageUsed: (totalGB / storageLimit) * 100,
-            filesCount: blobs.length,
+            storageLimit: limitGB,
+            percentageUsed: (totalSize / storageLimit) * 100,
+            filesCount,
         });
     } catch (error) {
-        console.error('Error fetching blob usage:', error);
+        console.error('Error fetching R2 usage:', error);
         return NextResponse.json(
             { error: 'Failed to fetch storage usage' },
             { status: 500 }

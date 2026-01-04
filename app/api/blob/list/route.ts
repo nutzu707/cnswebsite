@@ -1,4 +1,4 @@
-import { list } from '@vercel/blob';
+import { listFromR2 } from '@/lib/r2';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -10,23 +10,12 @@ export async function GET(request: Request): Promise<NextResponse> {
             return NextResponse.json({ error: 'Folder is required' }, { status: 400 });
         }
 
-        // List all blobs with the given prefix (folder)
-        const { blobs } = await list({
-            prefix: folder + '/',
-        });
-
-        // Extract just the filenames from the full paths
-        const files = blobs.map(blob => ({
-            filename: blob.pathname.split('/').pop() || blob.pathname,
-            url: blob.url,
-            uploadedAt: blob.uploadedAt,
-            size: blob.size,
-            pathname: blob.pathname,
-        }));
+        // List all files with the given prefix (folder)
+        const files = await listFromR2(folder + '/');
 
         return NextResponse.json({ files });
     } catch (error) {
-        console.error('Error listing blobs:', error);
+        console.error('Error listing R2 files:', error);
         return NextResponse.json(
             { files: [], error: 'Failed to list files' },
             { status: 500 }

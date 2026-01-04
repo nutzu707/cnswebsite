@@ -1,4 +1,4 @@
-import { put } from '@vercel/blob';
+import { uploadToR2, fileExistsInR2 } from '@/lib/r2';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -16,29 +16,37 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         // Create a path with folder structure
-        const blobPath = `${folder}/${filename}`;
+        const filePath = `${folder}/${filename}`;
 
-        console.log('Uploading to blob:', blobPath);
-
-        // Upload directly - Vercel Blob will handle duplicates with addRandomSuffix
-        const blob = await put(blobPath, request.body, {
-            access: 'public',
-            addRandomSuffix: false, // Keep exact filename
-        });
-
-        console.log('Upload successful:', blob.url);
-
-        return NextResponse.json(blob);
-    } catch (error: any) {
-        console.error('Error uploading to blob:', error);
-        
-        // Check if it's a blob already exists error
-        if (error.message && error.message.includes('already exists')) {
+        // Check if file already exists
+        const exists = await fileExistsInR2(filePath);
+        if (exists) {
             return NextResponse.json(
                 { error: `File "${filename}" already exists. Please delete the old file first or use a different name.` },
                 { status: 409 }
             );
         }
+
+        console.log('Uploading to R2:', filePath);
+
+        // Get content type from request headers
+        const contentType = request.headers.get('content-type') || 'application/octet-stream';
+
+        // Convert ReadableStream to Buffer
+        const arrayBuffer = await request.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Upload to R2
+        const result = await uploadToR2(filePath, buffer, contentType);
+
+        console.log('Upload successful:', result.url);
+
+        return NextResponse.json({
+            url: result.url,
+            pathname: result.pathname,
+        });
+    } catch (error: any) {
+        console.error('Error uploading to R2:', error);
         
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
