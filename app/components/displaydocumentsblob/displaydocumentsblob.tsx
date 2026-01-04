@@ -43,16 +43,6 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
         return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const fetchStorageUsage = async () => {
-        try {
-            const response = await fetch('/api/blob/usage');
-            const data = await response.json();
-            setStorageUsage(data);
-        } catch (error) {
-            console.error('Error fetching storage usage:', error);
-        }
-    };
-
     const fetchFiles = async () => {
         try {
             setLoading(true);
@@ -69,7 +59,6 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
 
     useEffect(() => {
         fetchFiles();
-        fetchStorageUsage();
     }, [folder]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,10 +234,7 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
                         </Button>
                         <Button
                             type="button"
-                            onClick={() => {
-                                fetchFiles();
-                                fetchStorageUsage();
-                            }}
+                            onClick={fetchFiles}
                             className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold mb-8"
                         >
                             Refresh
