@@ -43,25 +43,28 @@ export default function Catedre() {
                 <PageTitle text="CATEDRE"/>
                 
                 {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-12 h-12 animate-spin text-indigo-600" />
+                    <div className="flex flex-col items-center justify-center mt-16 lg:mt-24">
+                        <Loader2 className="w-12 h-12 animate-spin text-indigo-900 mb-4" />
+                        <p className="text-gray-600">Se încarcă...</p>
                     </div>
                 ) : photos.length === 0 ? (
-                    <div className="text-center py-20 text-xl text-gray-500">
-                        Nu sunt fotografii disponibile
+                    <div className="text-center mt-16 lg:mt-24">
+                        <div className="bg-white border-2 border-indigo-900 rounded-2xl p-12 max-w-md mx-auto shadow-lg">
+                            <p className="text-2xl font-bold text-indigo-900">Nu sunt fotografii disponibile</p>
+                        </div>
                     </div>
                 ) : (
                     photos.map((photo, index) => (
                         <div key={photo.pathname} className={index === 0 ? "mt-16 lg:mt-24" : "lg:mt-16 mt-8"}>
-                            <h1 className="lg:hidden block text-center text-2xl font-bold">{photo.label}</h1>
+                            <h1 className="lg:hidden block text-center text-2xl font-bold text-indigo-900 mb-4">{photo.label}</h1>
                             <div className="w-full relative aspect-[1400/500]">
                                 <img 
                                     src={photo.url} 
                                     alt={photo.label} 
-                                    className="absolute top-0 left-0 w-full h-full object-cover rounded-2xl border-2 shadow-2xl" 
+                                    className="absolute top-0 left-0 w-full h-full object-cover rounded-2xl border-2 border-gray-200 shadow-lg" 
                                 />
                                 <div className="absolute inset-x-0 justify-center lg:items-end items-start bottom-0 lg:pb-4 pt-2 hidden lg:flex">
-                                    <span className="bg-white lg:text-5xl text-xl font-bold lg:p-4 p-2 rounded-xl border-2 shadow-2xl">
+                                    <span className="bg-white lg:text-5xl text-xl font-bold lg:p-4 p-2 rounded-xl border-2 border-gray-200 shadow-lg text-indigo-900">
                                         {photo.label}
                                     </span>
                                 </div>

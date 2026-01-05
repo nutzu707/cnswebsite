@@ -7,13 +7,11 @@ import React from "react";
 import Footer from "@/app/components/footer/footer";
 
 export default function ManagementDocumente() {
-    const currentYear = new Date().getFullYear();
     return (
         <div>
             <PageBody>
                 <PageTitle text="DOCUMENTE MANAGEMENT"></PageTitle>
-                <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-2xl p-10 rounded-2xl border-2 ">
-                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">{currentYear}</p>
+                <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-lg bg-white p-6 lg:p-8 rounded-2xl border-2 border-gray-200">
                     <DocumentsListBlobPublic folder="documents/documente-management" />
                 </div>
                 <Footer/>

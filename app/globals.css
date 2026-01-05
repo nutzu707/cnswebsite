@@ -4,6 +4,7 @@
 
 
 
+/* 🎨 Main color variables - Change these to customize your site's colors! */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -18,7 +19,8 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 50%, #f5f7f9 100%);
+  background-attachment: fixed;
   font-family: Cambria,  'Better-Cambria', sans-serif ;
 }
 @tailwind base;

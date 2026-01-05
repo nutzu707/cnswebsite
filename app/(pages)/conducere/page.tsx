@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import PageBody from "@/app/components/pagebody/pagebody";
 import Footer from "@/app/components/footer/footer";
+import { Loader2 } from "lucide-react";
 
 interface Person {
     name: string;
@@ -48,18 +49,30 @@ export default function Conducere() {
             <PageBody>
                 <PageTitle text="CONDUCERE"></PageTitle>
                 {loading ? (
-                    <div className="text-center mt-16 lg:mt-24 text-2xl">Loading...</div>
+                    <div className="flex flex-col items-center justify-center mt-16 lg:mt-24 text-2xl">
+                        <Loader2 className="w-12 h-12 text-indigo-900 animate-spin mb-4" />
+                        <p className="text-gray-600">Se încarcă...</p>
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-2 place-items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-8 place-items-center px-4 mt-16 lg:mt-24">
                         {people.map((person, index) => (
-                            <div key={index} className="text-center mt-16 lg:mt-24">
-                                <img
-                                    className="w-[300px] rounded-full border-2 h-[300px] object-cover shadow-2xl"
-                                    src={person.photo}
-                                    alt={person.name}
-                                />
-                                <p className="font-bold text-3xl mt-4 uppercase">{person.name}</p>
-                                <p className="font-bold text-xl text-indigo-900 uppercase">{person.position}</p>
+                            <div 
+                                key={index} 
+                                className="text-center w-full max-w-[320px]"
+                            >
+                                <div className="relative w-[300px] h-[300px] mx-auto mb-6">
+                                    <img
+                                        className="w-full h-full rounded-full border-2 border-gray-300 object-cover shadow-xl"
+                                        src={person.photo}
+                                        alt={person.name}
+                                    />
+                                </div>
+                                <h3 className="font-bold text-2xl lg:text-3xl uppercase text-gray-900 mb-2">
+                                    {person.name}
+                                </h3>
+                                <p className="font-bold text-xl text-indigo-900 uppercase">
+                                    {person.position}
+                                </p>
                             </div>
                         ))}
                     </div>

@@ -54,14 +54,14 @@ export default function Proiecte() {
                 {loading ? (
                     <div className="mt-16 lg:mt-24 self-center space-y-[25px] lg:w-[1000px] w-full">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="w-full h-[100px] rounded-2xl shadow-2xl bg-gray-300 animate-pulse"></div>
+                            <div key={i} className="w-full h-[100px] rounded-2xl shadow-lg bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
                         ))}
                     </div>
                 ) : projects.length === 0 ? (
                     <div className="text-center mt-16 lg:mt-24">
-                        <div className="bg-gray-100 border-2 border-gray-300 rounded-2xl p-12 max-w-md mx-auto">
-                            <p className="text-2xl font-bold text-gray-600">Nu există proiecte momentan</p>
-                            <p className="text-gray-500 mt-2">Reveniți mai târziu pentru noutăți!</p>
+                        <div className="bg-white border-2 border-indigo-900 rounded-2xl p-12 max-w-md mx-auto shadow-lg">
+                            <p className="text-2xl font-bold text-indigo-900">Nu există proiecte momentan</p>
+                            <p className="text-gray-700 mt-2">Reveniți mai târziu pentru noutăți!</p>
                         </div>
                     </div>
                 ) : (

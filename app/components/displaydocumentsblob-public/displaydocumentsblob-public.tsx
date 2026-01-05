@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { SquareArrowRight } from 'lucide-react';
+import { FileText, ExternalLink, Loader2 } from 'lucide-react';
 
 interface BlobFile {
     filename: string;
@@ -48,55 +48,55 @@ const DocumentsListBlobPublic = ({ folder }: DocumentsListBlobPublicProps) => {
 
     if (loading) {
         return (
-            <div>
-                <ul>
-                    <li className="text-xl">Loading documents...</li>
-                </ul>
+            <div className="flex items-center gap-3 py-6">
+                <Loader2 className="w-6 h-6 text-indigo-900 animate-spin" />
+                <span className="text-lg text-gray-600">Se încarcă documentele...</span>
             </div>
         );
     }
 
     return (
         <div>
-            <ul>
-                {files.length === 0 ? (
-                    <li></li>
-                ) : (
-                    files.map((file, index) => {
+            {files.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-lg">Nu sunt documente disponibile momentan</p>
+                </div>
+            ) : (
+                <ul className="space-y-2">
+                    {files.map((file, index) => {
                         const delay = `${index * 40}ms`;
 
                         return (
-                            <a
+                            <li
                                 key={file.pathname}
                                 className="animate-fadeIn opacity-0"
                                 style={{ animationDelay: delay }}
-                                href={file.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
                             >
-                                <hr className="solid border-t-2" />
-                                <div className="flex mt-1 lg:mb-1">
-                                    <img className="lg:w-8 w-6 lg:h-8 h-6 mr-2" src="/websiteUI/document-icon.png" alt="icon" />
-                                    <div className="lg:text-2xl text-xl font-bold break-all flex-1">
-                                        {file.filename}
+                                <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-indigo-900 hover:shadow-md transition-all duration-300"
+                                >
+                                    <div className="bg-indigo-50 p-2 rounded-lg group-hover:bg-indigo-900 transition-colors duration-300">
+                                        <FileText className="w-6 h-6 text-indigo-900 group-hover:text-white transition-colors duration-300" />
                                     </div>
-                                    <div className="text-gray-600 lg:text-lg text-sm self-center mx-4 whitespace-nowrap">
-                                        {formatFileSize(file.size)}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-lg lg:text-xl font-bold text-gray-900 break-words group-hover:text-indigo-900 transition-colors duration-300">
+                                            {file.filename}
+                                        </div>
+                                        <div className="text-sm text-gray-500 mt-1">
+                                            {formatFileSize(file.size)}
+                                        </div>
                                     </div>
-                                    <SquareArrowRight className="ml-auto self-center min-w-6 text-indigo-900" />
-                                </div>
-                            </a>
+                                    <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-indigo-900 flex-shrink-0 transition-all duration-300 group-hover:scale-110" />
+                                </a>
+                            </li>
                         );
-                    })
-                )}
-
-                <div
-                    className="animate-fadeIn opacity-0"
-                    style={{ animationDelay: `${files.length * 40}ms` }}
-                >
-                    <hr className="solid border-t-2" />
-                </div>
-            </ul>
+                    })}
+                </ul>
+            )}
         </div>
     );
 };

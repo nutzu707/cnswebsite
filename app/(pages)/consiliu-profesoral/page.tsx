@@ -30,22 +30,18 @@ const ConsiliuProfesoral = () => {
     }, []);
 
     const sortedProfesori = [...profesori].sort((a, b) => a.nume.localeCompare(b.nume));
-    const currentYear = new Date().getFullYear();
-    const totalItems = sortedProfesori.length + 1;
 
     return (
         <div>
             <PageBody>
                 <PageTitle text="CONSILIU PROFESORAL"></PageTitle>
 
-                <ul className="mt-16 lg:mt-24 self-center shadow-2xl lg:p-10 p-2  rounded-2xl w-full lg:w-[1000px] border-2">
-                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 lg:mb-4 mb-2">{currentYear}</p>
-
+                <ul className="mt-16 lg:mt-24 self-center shadow-lg bg-white lg:p-8 p-4 rounded-2xl w-full lg:w-[1000px] border-2 border-gray-200">
                     <div
                         className="animate-fadeIn opacity-0"
                         style={{ animationDelay: `0ms` }}
                     >
-                        <hr className="solid border-t-2" />
+                        <hr className="border-t-2 border-gray-200" />
                     </div>
 
                     {sortedProfesori.map((profesor, index) => {
@@ -66,7 +62,7 @@ const ConsiliuProfesoral = () => {
                                         className="animate-fadeIn opacity-0"
                                         style={{ animationDelay: `${(index + 1) * 40}ms` }}
                                     >
-                                        <hr className="solid border-t-2" />
+                                        <hr className="border-t-2 border-gray-200" />
                                     </div>
                                 </li>
                             </div>
