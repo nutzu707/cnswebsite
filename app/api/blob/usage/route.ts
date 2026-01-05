@@ -6,22 +6,21 @@ export async function GET() {
         // Get R2 usage
         const { totalSize, filesCount } = await getR2Usage();
 
-        // Storage limits for R2 (10 GB free tier)
-        const storageLimit = 10 * 1024 * 1024 * 1024; // 10 GB in bytes
+        // Storage limits (1 GB = 1024 MB)
+        const storageLimit = 1 * 1024 * 1024 * 1024; // 1 GB in bytes
         const availableSize = Math.max(0, storageLimit - totalSize);
 
         // Convert to different units
-        const totalGB = totalSize / (1024 * 1024 * 1024);
-        const limitGB = storageLimit / (1024 * 1024 * 1024);
+        const totalMB = totalSize / (1024 * 1024);
+        const limitMB = storageLimit / (1024 * 1024);
 
         return NextResponse.json({
             totalSize: storageLimit,
             usedSize: totalSize,
             availableSize: availableSize,
             totalBytes: totalSize,
-            totalMB: totalSize / (1024 * 1024),
-            totalGB,
-            storageLimit: limitGB,
+            totalMB,
+            storageLimit: limitMB,
             percentageUsed: (totalSize / storageLimit) * 100,
             filesCount,
         });
