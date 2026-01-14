@@ -24,6 +24,8 @@ export default function RootLayout({
     return (
         <html lang="en">
         <head>
+        <SpeedInsights/>
+        <Analytics/>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="icon" type="image/x-icon" href="/websiteUI/logo.png" />
         </head>
