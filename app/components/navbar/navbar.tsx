@@ -210,8 +210,8 @@ const Navbar: React.FC = () => {
                         >
                             <div className="text-xl">
                                 <Link href="/elevi-documente"><p>Documente</p></Link>
-                                {navbarLinks.orar && <a href={navbarLinks.orar}><p>Orar</p></a>}
-                                {navbarLinks.premii && <a href={navbarLinks.premii}><p>Premii</p></a>}
+                                {navbarLinks.orar && <a href={navbarLinks.orar} target="_blank" rel="noopener noreferrer"><p>Orar</p></a>}
+                                {navbarLinks.premii && <a href={navbarLinks.premii} target="_blank" rel="noopener noreferrer"><p>Premii</p></a>}
                                 <Link href="/cjex-salaj"><p>CJEX Sălaj</p></Link>
                             </div>
                         </div>
