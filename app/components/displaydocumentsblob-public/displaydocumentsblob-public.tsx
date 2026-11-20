@@ -14,9 +14,11 @@ interface BlobFile {
 
 interface DocumentsListBlobPublicProps {
     folder: string;
+    /** Extra docs shown with the folder list (e.g. previous-year files still hosted elsewhere). */
+    extraFiles?: BlobFile[];
 }
 
-const DocumentsListBlobPublic = ({ folder }: DocumentsListBlobPublicProps) => {
+const DocumentsListBlobPublic = ({ folder, extraFiles = [] }: DocumentsListBlobPublicProps) => {
     const [files, setFiles] = useState<BlobFile[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -34,17 +36,20 @@ const DocumentsListBlobPublic = ({ folder }: DocumentsListBlobPublicProps) => {
                 setLoading(true);
                 const response = await fetch(`/api/blob/list?folder=${encodeURIComponent(folder)}`);
                 const data = await response.json();
-                setFiles(data.files || []);
+                const fromFolder: BlobFile[] = data.files || [];
+                const folderPathnames = new Set(fromFolder.map((f) => f.pathname));
+                const extras = extraFiles.filter((f) => !folderPathnames.has(f.pathname));
+                setFiles([...fromFolder, ...extras]);
             } catch (error) {
                 console.error('Error fetching files:', error);
-                setFiles([]);
+                setFiles(extraFiles);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchFiles();
-    }, [folder]);
+    }, [folder, extraFiles]);
 
     if (loading) {
         return (
