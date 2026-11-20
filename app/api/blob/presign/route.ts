@@ -1,4 +1,4 @@
-import { fileExistsInR2, getPresignedUploadUrl } from '@/lib/r2';
+import { ensureR2Cors, fileExistsInR2, getPresignedUploadUrl } from '@/lib/r2';
 import { isAuthenticated } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
@@ -18,6 +18,9 @@ export async function POST(request: Request): Promise<NextResponse> {
             return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
         }
 
+        // Keep CORS in sync so browser → R2 PUTs succeed
+        const cors = await ensureR2Cors();
+
         const filePath = `${folder}/${filename}`;
 
         if (!allowOverwrite) {
@@ -34,7 +37,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         const result = await getPresignedUploadUrl(filePath, contentType);
 
-        return NextResponse.json(result);
+        return NextResponse.json({
+            ...result,
+            cors,
+        });
     } catch (error) {
         console.error('Error creating presigned upload URL:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -1,11 +1,11 @@
 /**
- * Client-side helpers for uploading to R2.
- * - Small files: single POST through /api/blob/upload
- * - Large files: multipart chunks through /api/blob/multipart (avoids Vercel 4.5MB limit + R2 CORS)
+ * Upload strategy:
+ * 1) Prefer direct browser → R2 via presigned PUT (fast; needs bucket CORS)
+ * 2) If that fails (CORS / network), fall back to chunked staging through our API
+ *    (works without CORS; each chunk stays under Vercel's body limit)
  */
 
-const PROXY_UPLOAD_MAX_BYTES = 3.5 * 1024 * 1024;
-const MULTIPART_CHUNK_BYTES = 3 * 1024 * 1024; // under Vercel body limit
+const CHUNK_BYTES = 3 * 1024 * 1024;
 
 export async function parseJsonResponse<T = any>(response: Response): Promise<T> {
     const text = await response.text();
@@ -26,56 +26,79 @@ export interface UploadResult {
     pathname: string;
 }
 
-async function uploadViaProxy(
+function resolveContentType(
+    file: Blob | File,
+    options?: { contentType?: string }
+): string {
+    return (
+        options?.contentType ||
+        (file instanceof File && file.type ? file.type : undefined) ||
+        'application/octet-stream'
+    );
+}
+
+async function uploadViaPresign(
     file: Blob | File,
     filename: string,
     folder: string,
     options?: { overwrite?: boolean; contentType?: string }
 ): Promise<UploadResult> {
-    const contentType =
-        options?.contentType ||
-        (file instanceof File && file.type ? file.type : undefined) ||
-        'application/octet-stream';
+    const contentType = resolveContentType(file, options);
     const overwrite = options?.overwrite ? 'true' : 'false';
 
     const params = new URLSearchParams({
         filename,
         folder,
         overwrite,
+        contentType,
     });
 
-    const response = await fetch(`/api/blob/upload?${params.toString()}`, {
+    const presignResponse = await fetch(`/api/blob/presign?${params.toString()}`, {
         method: 'POST',
+    });
+
+    const presignData = await parseJsonResponse<{
+        uploadUrl?: string;
+        url?: string;
+        pathname?: string;
+        error?: string;
+        details?: string;
+    }>(presignResponse);
+
+    if (!presignResponse.ok || !presignData.uploadUrl || !presignData.url || !presignData.pathname) {
+        throw new Error(
+            presignData.error ||
+                presignData.details ||
+                `Failed to prepare upload (${presignResponse.status})`
+        );
+    }
+
+    const uploadResponse = await fetch(presignData.uploadUrl, {
+        method: 'PUT',
         body: file,
         headers: {
             'Content-Type': contentType,
         },
     });
 
-    const data = await parseJsonResponse<{
-        url?: string;
-        pathname?: string;
-        error?: string;
-        details?: string;
-    }>(response);
-
-    if (!response.ok || !data.url || !data.pathname) {
-        throw new Error(data.error || data.details || `Upload failed (${response.status})`);
+    if (!uploadResponse.ok) {
+        const errText = (await uploadResponse.text().catch(() => '')).trim();
+        throw new Error(errText || `R2 upload failed (${uploadResponse.status})`);
     }
 
-    return { url: data.url, pathname: data.pathname };
+    return {
+        url: presignData.url,
+        pathname: presignData.pathname,
+    };
 }
 
-async function uploadViaMultipart(
+async function uploadViaChunked(
     file: Blob | File,
     filename: string,
     folder: string,
     options?: { overwrite?: boolean; contentType?: string }
 ): Promise<UploadResult> {
-    const contentType =
-        options?.contentType ||
-        (file instanceof File && file.type ? file.type : undefined) ||
-        'application/octet-stream';
+    const contentType = resolveContentType(file, options);
     const overwrite = options?.overwrite ? 'true' : 'false';
 
     const initParams = new URLSearchParams({
@@ -84,41 +107,39 @@ async function uploadViaMultipart(
         folder,
         overwrite,
         contentType,
+        totalSize: String(file.size),
     });
 
-    const initResponse = await fetch(`/api/blob/multipart?${initParams.toString()}`, {
+    const initResponse = await fetch(`/api/blob/chunked?${initParams.toString()}`, {
         method: 'POST',
     });
     const initData = await parseJsonResponse<{
-        uploadId?: string;
+        sessionId?: string;
         pathname?: string;
         error?: string;
         details?: string;
     }>(initResponse);
 
-    if (!initResponse.ok || !initData.uploadId || !initData.pathname) {
-        throw new Error(initData.error || initData.details || `Failed to start upload (${initResponse.status})`);
+    if (!initResponse.ok || !initData.sessionId || !initData.pathname) {
+        throw new Error(initData.error || initData.details || `Failed to start chunked upload (${initResponse.status})`);
     }
 
-    const { uploadId, pathname } = initData;
-    const parts: { ETag: string; PartNumber: number }[] = [];
+    const { sessionId, pathname } = initData;
+    const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_BYTES));
 
     try {
-        const totalParts = Math.max(1, Math.ceil(file.size / MULTIPART_CHUNK_BYTES));
-
-        for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-            const start = (partNumber - 1) * MULTIPART_CHUNK_BYTES;
-            const end = Math.min(start + MULTIPART_CHUNK_BYTES, file.size);
+        for (let index = 0; index < totalChunks; index++) {
+            const start = index * CHUNK_BYTES;
+            const end = Math.min(start + CHUNK_BYTES, file.size);
             const chunk = file.slice(start, end);
 
-            const partParams = new URLSearchParams({
-                action: 'part',
-                pathname,
-                uploadId,
-                partNumber: String(partNumber),
+            const chunkParams = new URLSearchParams({
+                action: 'chunk',
+                sessionId,
+                index: String(index),
             });
 
-            const partResponse = await fetch(`/api/blob/multipart?${partParams.toString()}`, {
+            const chunkResponse = await fetch(`/api/blob/chunked?${chunkParams.toString()}`, {
                 method: 'POST',
                 body: chunk,
                 headers: {
@@ -126,28 +147,25 @@ async function uploadViaMultipart(
                 },
             });
 
-            const partData = await parseJsonResponse<{
-                ETag?: string;
-                PartNumber?: number;
-                error?: string;
-                details?: string;
-            }>(partResponse);
-
-            if (!partResponse.ok || !partData.ETag || !partData.PartNumber) {
+            const chunkData = await parseJsonResponse<{ error?: string; details?: string }>(chunkResponse);
+            if (!chunkResponse.ok) {
                 throw new Error(
-                    partData.error ||
-                        partData.details ||
-                        `Failed to upload part ${partNumber}/${totalParts}`
+                    chunkData.error ||
+                        chunkData.details ||
+                        `Failed to upload chunk ${index + 1}/${totalChunks}`
                 );
             }
-
-            parts.push({ ETag: partData.ETag, PartNumber: partData.PartNumber });
         }
 
-        const completeResponse = await fetch('/api/blob/multipart?action=complete', {
+        const completeResponse = await fetch('/api/blob/chunked?action=complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pathname, uploadId, parts }),
+            body: JSON.stringify({
+                sessionId,
+                pathname,
+                contentType,
+                totalChunks,
+            }),
         });
 
         const completeData = await parseJsonResponse<{
@@ -167,15 +185,14 @@ async function uploadViaMultipart(
 
         return { url: completeData.url, pathname: completeData.pathname };
     } catch (error) {
-        // Best-effort cleanup so incomplete multipart uploads don't pile up in R2
         try {
-            await fetch('/api/blob/multipart?action=abort', {
+            await fetch('/api/blob/chunked?action=abort', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pathname, uploadId }),
+                body: JSON.stringify({ sessionId }),
             });
         } catch {
-            // ignore abort failures
+            // ignore cleanup errors
         }
         throw error;
     }
@@ -187,19 +204,16 @@ export async function uploadToBlob(
     folder: string,
     options?: { overwrite?: boolean; contentType?: string }
 ): Promise<UploadResult> {
-    if (file.size > PROXY_UPLOAD_MAX_BYTES) {
-        return uploadViaMultipart(file, filename, folder, options);
-    }
-
     try {
-        return await uploadViaProxy(file, filename, folder, options);
+        return await uploadViaPresign(file, filename, folder, options);
     } catch (error) {
         const message = error instanceof Error ? error.message : '';
-        // Platform rejected body as too large — retry with chunked multipart
-        if (/entity too large|413|too large|non-JSON response: Request En|Failed to fetch/i.test(message)) {
-            return uploadViaMultipart(file, filename, folder, options);
+        // Don't mask auth / conflict errors
+        if (/already exists|Unauthorized|401\b|409\b/i.test(message)) {
+            throw error;
         }
-        throw error;
+        // Direct PUT often fails without R2 CORS — chunked API path always works
+        return uploadViaChunked(file, filename, folder, options);
     }
 }
 

@@ -13,6 +13,8 @@ interface StorageUsage {
 const BlobStorageIndicator = () => {
     const [usage, setUsage] = useState<StorageUsage | null>(null);
     const [loading, setLoading] = useState(true);
+    const [corsMessage, setCorsMessage] = useState<string | null>(null);
+    const [corsOk, setCorsOk] = useState<boolean | null>(null);
 
     const fetchUsage = async () => {
         try {
@@ -27,10 +29,22 @@ const BlobStorageIndicator = () => {
         }
     };
 
+    const ensureCors = async () => {
+        try {
+            const response = await fetch('/api/blob/setup-cors', { method: 'POST' });
+            const data = await response.json();
+            setCorsOk(Boolean(data.ok));
+            setCorsMessage(data.message || null);
+        } catch (error) {
+            setCorsOk(false);
+            setCorsMessage(error instanceof Error ? error.message : 'Failed to configure R2 CORS');
+        }
+    };
+
     useEffect(() => {
         fetchUsage();
-        
-        // Refresh every 30 seconds
+        ensureCors();
+
         const interval = setInterval(fetchUsage, 30000);
         return () => clearInterval(interval);
     }, []);
@@ -66,7 +80,7 @@ const BlobStorageIndicator = () => {
                         {usage.filesCount} file{usage.filesCount !== 1 ? 's' : ''} stored
                     </p>
                 </div>
-                
+
                 <div className="flex-1 w-full">
                     <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
                         <div
@@ -84,17 +98,42 @@ const BlobStorageIndicator = () => {
                 </div>
 
                 <button
-                    onClick={fetchUsage}
+                    onClick={() => {
+                        fetchUsage();
+                        ensureCors();
+                    }}
                     className="px-4 py-2 bg-indigo-900 text-white rounded-md hover:bg-indigo-950 font-bold"
                 >
                     Refresh
                 </button>
             </div>
 
+            {corsMessage && (
+                <div
+                    className={`mt-4 p-3 border-2 rounded-lg ${
+                        corsOk
+                            ? 'bg-green-50 border-green-500 text-green-800'
+                            : 'bg-amber-50 border-amber-500 text-amber-900'
+                    }`}
+                >
+                    <p className="font-semibold">
+                        {corsOk ? 'R2 uploads ready' : 'R2 CORS needs attention'}
+                    </p>
+                    <p className="text-sm mt-1">{corsMessage}</p>
+                    {!corsOk && (
+                        <p className="text-sm mt-2">
+                            In Cloudflare → R2 → your bucket → Settings → CORS, paste the rules from
+                            <code className="mx-1">r2-cors.json</code>
+                            (allow PUT from https://www.cnszalau.ro).
+                        </p>
+                    )}
+                </div>
+            )}
+
             {usage.percentageUsed > 80 && (
                 <div className="mt-4 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
                     <p className="text-red-800 font-bold">
-                        ⚠️ Warning: You're approaching your storage limit!
+                        Warning: You&apos;re approaching your storage limit!
                     </p>
                 </div>
             )}
@@ -103,4 +142,3 @@ const BlobStorageIndicator = () => {
 };
 
 export default BlobStorageIndicator;
-
