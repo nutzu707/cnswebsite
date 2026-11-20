@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const files = await listFromR2('consiliu-profesoral/');
+        const files = (await listFromR2('consiliu-profesoral/')).filter((file) =>
+            file.filename.endsWith('.json')
+        );
 
         const profesori = await Promise.all(
             files.map(async (file) => {

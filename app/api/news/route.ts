@@ -27,6 +27,7 @@ export async function GET() {
                         image: thumbnail, // Now this is an R2 URL, not base64!
                         link: `/anunt?id=${file.filename.replace(".json", "")}`,
                         url: file.url,
+                        pathname: file.pathname,
                     };
                 } catch (error) {
                     console.error(`Error parsing news file ${file.pathname}:`, error);

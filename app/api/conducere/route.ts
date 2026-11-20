@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const files = await listFromR2('conducere/');
+        const files = (await listFromR2('conducere/')).filter(
+            (file) =>
+                file.filename.endsWith('.json') &&
+                !file.pathname.includes('/photos/')
+        );
 
         const people = await Promise.all(
             files.map(async (file) => {

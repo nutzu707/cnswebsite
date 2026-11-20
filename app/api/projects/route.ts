@@ -21,7 +21,8 @@ export async function GET() {
                     
                     return {
                         ...jsonData.project,
-                        url: file.url, // Include URL for deletion
+                        url: file.url,
+                        pathname: file.pathname,
                     };
                 } catch (error) {
                     console.error(`Error parsing project file ${file.pathname}:`, error);

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { parseJsonResponse } from "@/lib/upload-client";
 
 interface NewsArticle {
     title: string;
@@ -64,7 +65,7 @@ const NewsListDashboard = () => {
                 await fetchArticles();
                 alert('Article deleted successfully!');
             } else {
-                const errorData = await response.json();
+                const errorData = await parseJsonResponse<{ error?: string }>(response);
                 throw new Error(errorData.error || 'Delete failed');
             }
         } catch (error) {

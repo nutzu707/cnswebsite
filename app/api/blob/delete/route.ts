@@ -1,8 +1,13 @@
 import { deleteFromR2 } from '@/lib/r2';
+import { isAuthenticated } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export async function DELETE(request: Request): Promise<NextResponse> {
     try {
+        if (!(await isAuthenticated())) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(request.url);
         const url = searchParams.get('url');
         const pathname = searchParams.get('pathname');

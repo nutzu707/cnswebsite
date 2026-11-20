@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload } from "lucide-react";
+import { uploadToBlob } from "@/lib/upload-client";
 
 interface CatedraPhoto {
     filename: string;
@@ -54,21 +55,12 @@ const CatedreManager = () => {
         setUploading(catedra.filename);
         
         try {
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(catedra.filename)}&folder=catedre-photos&overwrite=true`,
-                {
-                    method: 'POST',
-                    body: file,
-                }
-            );
-
-            if (response.ok) {
-                alert(`${catedra.label} photo uploaded successfully!`);
-                await fetchPhotos();
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Upload failed');
-            }
+            await uploadToBlob(file, catedra.filename, 'catedre-photos', {
+                overwrite: true,
+                contentType: file.type || 'image/jpeg',
+            });
+            alert(`${catedra.label} photo uploaded successfully!`);
+            await fetchPhotos();
         } catch (error) {
             console.error('Error uploading photo:', error);
             alert(error instanceof Error ? error.message : 'Failed to upload photo');

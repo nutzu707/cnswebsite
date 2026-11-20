@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from 'react';
+import { uploadToBlob } from '@/lib/upload-client';
 
 interface ContentItem {
     type: 'paragraph' | 'image';
@@ -51,26 +52,13 @@ const CreateNews = () => {
 
     const handleContentImageUpload = async (index: number, file: File) => {
         try {
-            // Upload image to R2
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(file.name)}&folder=news/images`,
-                {
-                    method: 'POST',
-                    body: file,
-                }
-            );
-
-            if (response.ok) {
-                const result = await response.json();
-                const updatedContent = [...content];
-                updatedContent[index] = { ...updatedContent[index], imageUrl: result.url };
-                setContent(updatedContent);
-            } else {
-                alert('Failed to upload image');
-            }
+            const result = await uploadToBlob(file, file.name, 'news/images');
+            const updatedContent = [...content];
+            updatedContent[index] = { ...updatedContent[index], imageUrl: result.url };
+            setContent(updatedContent);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Failed to upload image');
+            alert(error instanceof Error ? error.message : 'Failed to upload image');
         }
     };
 
@@ -107,65 +95,41 @@ const CreateNews = () => {
 
         setUploading(true);
         try {
-            // Step 1: Upload thumbnail to R2
-            const thumbnailResponse = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(thumbnailFile.name)}&folder=news/thumbnails`,
-                {
-                    method: 'POST',
-                    body: thumbnailFile,
-                }
+            const thumbnailResult = await uploadToBlob(
+                thumbnailFile,
+                thumbnailFile.name,
+                'news/thumbnails'
             );
 
-            if (!thumbnailResponse.ok) {
-                throw new Error('Failed to upload thumbnail');
-            }
-
-            const thumbnailResult = await thumbnailResponse.json();
-
-            // Step 2: Create article JSON with R2 URLs
             const article = {
                 article: {
                     title,
-                    post_date: isoDate, // ISO format (YYYY-MM-DD)
-                    thumbnail: thumbnailResult.url, // R2 URL, not base64!
+                    post_date: isoDate,
+                    thumbnail: thumbnailResult.url,
                     content: content.map(item => ({
                         type: item.type,
                         text: item.text,
-                        imageUrl: item.imageUrl, // R2 URL, not base64!
+                        imageUrl: item.imageUrl,
                         caption: item.caption,
                     })),
                 },
             };
 
-            // Step 3: Upload JSON to R2
             const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
             const fileName = `${sanitizedTitle}.json`;
-
             const jsonBlob = new Blob([JSON.stringify(article, null, 2)], { type: 'application/json' });
 
-            const jsonResponse = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=news`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            await uploadToBlob(jsonBlob, fileName, 'news', { contentType: 'application/json' });
 
-            if (jsonResponse.ok) {
-                alert('Anunț publicat cu succes!');
-                // Reset form
-                setTitle('');
-                setPostDate('');
-                setThumbnailFile(null);
-                setThumbnailPreview(null);
-                setContent([]);
-            } else {
-                const errorData = await jsonResponse.json();
-                alert(errorData.error || 'Failed to publish article');
-            }
+            alert('Anunț publicat cu succes!');
+            setTitle('');
+            setPostDate('');
+            setThumbnailFile(null);
+            setThumbnailPreview(null);
+            setContent([]);
         } catch (error) {
             console.error('Error publishing article:', error);
-            alert('Failed to publish article');
+            alert(error instanceof Error ? error.message : 'Failed to publish article');
         } finally {
             setUploading(false);
         }

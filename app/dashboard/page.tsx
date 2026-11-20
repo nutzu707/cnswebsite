@@ -2,10 +2,6 @@ import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 import PageBody from "@/app/components/pagebody/pagebody";
 import PageTitle from "@/app/components/pagetitle/pagetitle";
-import {Button} from "@/components/ui/button";
-import Footer from "@/app/components/footer/footer";
-import {promises as fs} from "fs";
-import DocumentsListDash from "@/app/components/displaydocumentsdash/displaydocumentsdash";
 import DocumentsListBlob from "@/app/components/displaydocumentsblob/displaydocumentsblob";
 import BlobStorageIndicator from "@/app/components/blobstorageindicator/blobstorageindicator";
 import PersonManager from "@/app/components/personmanager/personmanager";
@@ -13,17 +9,12 @@ import DirigintiManager from "@/app/components/dirigintimanager/dirigintimanager
 import ConsiliuProfesoralManager from "@/app/components/consiliuprofesoralmanager/consiliuprofesoralmanager";
 import CatedreManager from "@/app/components/catedremanager/catedremanager";
 import CreateProjectJsonFile from "@/app/components/createproject/createproject";
-import CreateConducerePersonJsonFile from "@/app/components/modifyconducere/modifyconducere";
-import CreateConsiliuPersonJsonFile from "@/app/components/modifyconsiliu/modifyconsiliu";
 import React from "react";
 import RefreshButton from "@/app/components/refreshbutton/refreshbutton";
 import CreateNews from "@/app/components/createnewsarticle/createnewsarticle";
 import NewsListDashboard from "@/app/components/newslistdashboard/newslistdashboard";
 import ProjectsListDashboard from "@/app/components/projectslistdashboard/projectslistdashboard";
 import Navbardashboard from "@/app/components/navbardashboard/navbardashboard";
-import Restartbutton from "@/app/components/restartbutton/restartbutton";
-import ModifyDiriginti from "@/app/components/modifydiriginti/modifydiriginti";
-import ModifyConsiliuProfesoral from "@/app/components/modifyconsiliuprofesoral/modifyconsiliuprofesoral";
 import ModifyNavbarLinks from "@/app/components/modifynavbarlinks/modifynavbarlinks";
 import LogoutButton from "@/app/components/logoutbutton/logoutbutton";
 
@@ -34,31 +25,7 @@ export default async function Dashboard() {
         redirect("/auth/signin");
     }
 
-    async function action(formData: FormData){
-        "use server";
-        const file= formData.get("file") as File;
-        const collection = formData.get("collection") as string;
-
-        console.log(file);
-        console.log(collection);
-
-        if (!file || file.size===0){
-            return {error:"No file uploaded"};
-        }
-
-        const data = await file.arrayBuffer();
-        const uploadPath = `${process.cwd()}/public/uploads/${collection}/${file.name}`;
-        await fs.writeFile(uploadPath, Buffer.from(data));
-        
-        console.log(`File uploaded successfully: ${uploadPath}`);
-        
-        // Trigger revalidation
-        const { revalidatePath } = await import('next/cache');
-        revalidatePath('/dashboard');
-
-    }
-
-        return (
+    return (
         <div>
 
             <PageBody>

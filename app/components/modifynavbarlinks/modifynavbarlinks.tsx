@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { uploadToBlob } from '@/lib/upload-client';
 
 interface NavbarLinksConfig {
     orar: string;
@@ -36,26 +37,15 @@ const ModifyNavbarLinks = () => {
             const jsonBlob = new Blob([JSON.stringify(nextConfig, null, 2)], {
                 type: 'application/json',
             });
-            
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent('navbar-config.json')}&folder=navbar-links&overwrite=true`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
-            
-            if (response.ok) {
-                console.log('Config saved successfully:', nextConfig);
-                setConfig(nextConfig);
-                // Refresh config from server to ensure it's properly saved
-                await fetchConfig();
-                return true;
-            } else {
-                const errorData = await response.json();
-                console.error('Failed to save config:', response.status, errorData);
-                throw new Error(errorData.error || 'Failed to save config');
-            }
+
+            await uploadToBlob(jsonBlob, 'navbar-config.json', 'navbar-links', {
+                overwrite: true,
+                contentType: 'application/json',
+            });
+
+            setConfig(nextConfig);
+            await fetchConfig();
+            return true;
         } catch (error) {
             console.error('Error saving config:', error);
             throw error;
@@ -66,31 +56,15 @@ const ModifyNavbarLinks = () => {
         try {
             setUploading(field);
             const safeName = file.name.replace(/\s+/g, '_');
-            
-            // Upload the file to R2 storage (allow overwrite for navbar links)
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(safeName)}&folder=navbar-links&overwrite=true`,
-                {
-                    method: 'POST',
-                    body: file,
-                }
-            );
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Upload failed:', response.status, errorData);
-                throw new Error(errorData.error || `Upload failed: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('File uploaded:', result);
-            
-            // Update config with the R2 URL
+
+            const result = await uploadToBlob(file, safeName, 'navbar-links', {
+                overwrite: true,
+            });
+
             const nextConfig = {
                 ...config,
                 [field]: result.url,
             };
-            console.log('Saving new config:', nextConfig);
             await saveConfig(nextConfig);
             alert('Încărcat și salvat cu succes! Refresh pagina pentru a vedea schimbările.');
         } catch (error) {

@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
+import { uploadToBlob } from '@/lib/upload-client';
 
 const CreateProjectJsonFile = () => {
     const [title, setTitle] = useState('');
@@ -35,57 +36,29 @@ const CreateProjectJsonFile = () => {
 
         setUploading(true);
         try {
-            // Step 1: Upload photo to R2
-            const photoResponse = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(photoFile.name)}&folder=projects/photos`,
-                {
-                    method: 'POST',
-                    body: photoFile,
-                }
-            );
+            const photoResult = await uploadToBlob(photoFile, photoFile.name, 'projects/photos');
 
-            if (!photoResponse.ok) {
-                throw new Error('Failed to upload photo');
-            }
-
-            const photoResult = await photoResponse.json();
-
-            // Step 2: Create project JSON with R2 URL
             const project = {
                 project: {
                     title,
-                    photo: photoResult.url, // R2 URL, not base64!
+                    photo: photoResult.url,
                     link,
                     color,
                 },
             };
 
-            // Step 3: Upload JSON to R2
             const sanitizedTitle = title.replace(/[^a-zA-Z0-9_\-]/g, '_');
             const fileName = `${sanitizedTitle}.json`;
-
             const jsonBlob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
 
-            const jsonResponse = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=projects`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            await uploadToBlob(jsonBlob, fileName, 'projects', { contentType: 'application/json' });
 
-            if (jsonResponse.ok) {
-                alert('Proiect creat cu succes!');
-                // Reset form
-                setTitle('');
-                setPhotoFile(null);
-                setPhotoPreview(null);
-                setLink('');
-                setColor('#4F46E5');
-            } else {
-                const errorData = await jsonResponse.json();
-                alert(errorData.error || 'Eroare la crearea proiectului!');
-            }
+            alert('Proiect creat cu succes!');
+            setTitle('');
+            setPhotoFile(null);
+            setPhotoPreview(null);
+            setLink('');
+            setColor('#4F46E5');
         } catch (error) {
             console.error('Error creating project:', error);
             const errorMessage = error instanceof Error ? error.message : 'Eroare la crearea proiectului!';

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ArrowDown, Trash2, Loader2 } from "lucide-react";
+import { uploadToBlob } from "@/lib/upload-client";
 
 interface Profesor {
     filename: string;
@@ -72,23 +73,14 @@ const ConsiliuProfesoralManager = () => {
             const fileName = `${sanitizedName}.json`;
             const jsonBlob = new Blob([JSON.stringify(profesorData, null, 2)], { type: 'application/json' });
 
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=consiliu-profesoral`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            await uploadToBlob(jsonBlob, fileName, 'consiliu-profesoral', {
+                contentType: 'application/json',
+            });
 
-            if (response.ok) {
-                alert('Profesor added successfully!');
-                setShowAddForm(false);
-                resetForm();
-                await fetchProfesori();
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to add profesor');
-            }
+            alert('Profesor added successfully!');
+            setShowAddForm(false);
+            resetForm();
+            await fetchProfesori();
         } catch (error) {
             console.error('Error adding profesor:', error);
             alert(error instanceof Error ? error.message : 'Error adding profesor!');
@@ -133,7 +125,8 @@ const ConsiliuProfesoralManager = () => {
 
     const updateOrders = async (newProfesori: Profesor[]) => {
         try {
-            const updatePromises = newProfesori.map(async (profesor, idx) => {
+            for (let idx = 0; idx < newProfesori.length; idx++) {
+                const profesor = newProfesori[idx];
                 const data = {
                     profesor: {
                         nume: profesor.nume,
@@ -141,16 +134,13 @@ const ConsiliuProfesoralManager = () => {
                     }
                 };
 
-                await fetch(`/api/blob/delete?pathname=${encodeURIComponent(profesor.pathname)}`, { method: 'DELETE' });
-                
                 const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                return fetch(
-                    `/api/blob/upload?filename=${encodeURIComponent(profesor.filename)}&folder=consiliu-profesoral`,
-                    { method: 'POST', body: jsonBlob }
-                );
-            });
+                await uploadToBlob(jsonBlob, profesor.filename, 'consiliu-profesoral', {
+                    overwrite: true,
+                    contentType: 'application/json',
+                });
+            }
 
-            await Promise.all(updatePromises);
             await fetchProfesori();
         } catch (error) {
             console.error('Error updating orders:', error);

@@ -1,8 +1,17 @@
 import { uploadToR2, fileExistsInR2 } from '@/lib/r2';
+import { isAuthenticated } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
+/**
+ * Server-side upload proxy. Prefer /api/blob/presign + direct R2 PUT for large files
+ * (Vercel rejects bodies over ~4.5MB with "Request Entity Too Large").
+ */
 export async function POST(request: Request): Promise<NextResponse> {
     try {
+        if (!(await isAuthenticated())) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(request.url);
         const filename = searchParams.get('filename');
         const folder = searchParams.get('folder') || 'documents';
@@ -16,10 +25,8 @@ export async function POST(request: Request): Promise<NextResponse> {
             return NextResponse.json({ error: 'Request body is required' }, { status: 400 });
         }
 
-        // Create a path with folder structure
         const filePath = `${folder}/${filename}`;
 
-        // Check if file already exists (unless overwrite is allowed)
         if (!allowOverwrite) {
             const exists = await fileExistsInR2(filePath);
             if (exists) {
@@ -30,19 +37,21 @@ export async function POST(request: Request): Promise<NextResponse> {
             }
         }
 
-        console.log('Uploading to R2:', filePath);
-
-        // Get content type from request headers
         const contentType = request.headers.get('content-type') || 'application/octet-stream';
-
-        // Convert ReadableStream to Buffer
         const arrayBuffer = await request.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to R2
-        const result = await uploadToR2(filePath, buffer, contentType);
+        // Soft guard: Vercel will often reject larger bodies before this runs
+        if (buffer.byteLength > 4 * 1024 * 1024) {
+            return NextResponse.json(
+                {
+                    error: 'File too large for proxy upload. Use the dashboard upload flow (direct R2) for files over 4MB.',
+                },
+                { status: 413 }
+            );
+        }
 
-        console.log('Upload successful:', result.url);
+        const result = await uploadToR2(filePath, buffer, contentType);
 
         return NextResponse.json({
             url: result.url,
@@ -50,7 +59,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         });
     } catch (error: any) {
         console.error('Error uploading to R2:', error);
-        
+
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json(
             { error: 'Failed to upload file', details: errorMessage },
@@ -58,4 +67,3 @@ export async function POST(request: Request): Promise<NextResponse> {
         );
     }
 }
-

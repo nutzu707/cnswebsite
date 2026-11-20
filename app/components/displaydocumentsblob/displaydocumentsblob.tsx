@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
+import { parseJsonResponse, uploadToBlob } from "@/lib/upload-client";
 
 interface BlobFile {
     filename: string;
@@ -101,30 +102,15 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
                 ));
 
                 try {
-                    const response = await fetch(
-                        `/api/blob/upload?filename=${encodeURIComponent(file.name)}&folder=${encodeURIComponent(folder)}`,
-                        {
-                            method: 'POST',
-                            body: file,
-                        }
-                    );
+                    await uploadToBlob(file, file.name, folder);
 
-                    if (response.ok) {
-                        setUploadProgress(prev => prev.map((p, idx) => 
-                            idx === i ? { ...p, status: 'success' } : p
-                        ));
-                        successCount++;
-                    } else {
-                        const errorData = await response.json();
-                        const errorMessage = errorData.error || `Upload failed with status ${response.status}`;
-                        setUploadProgress(prev => prev.map((p, idx) => 
-                            idx === i ? { ...p, status: 'error', error: errorMessage } : p
-                        ));
-                        errorCount++;
-                    }
+                    setUploadProgress(prev => prev.map((p, idx) =>
+                        idx === i ? { ...p, status: 'success' } : p
+                    ));
+                    successCount++;
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
-                    setUploadProgress(prev => prev.map((p, idx) => 
+                    setUploadProgress(prev => prev.map((p, idx) =>
                         idx === i ? { ...p, status: 'error', error: errorMessage } : p
                     ));
                     errorCount++;
@@ -176,7 +162,7 @@ const DocumentsListBlob = ({ folder }: DocumentsListBlobProps) => {
                 await fetchFiles();
                 alert('File deleted successfully!');
             } else {
-                const errorData = await response.json();
+                const errorData = await parseJsonResponse<{ error?: string }>(response);
                 const errorMessage = errorData.error || 'Delete failed';
                 console.error('Delete failed:', errorMessage);
                 throw new Error(errorMessage);

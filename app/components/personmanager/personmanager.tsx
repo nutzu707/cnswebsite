@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ArrowDown, Trash2, Loader2 } from "lucide-react";
+import { pathnameFromPublicUrl, uploadToBlob } from "@/lib/upload-client";
 
 interface Person {
     filename: string;
@@ -98,29 +99,12 @@ const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
 
         setUploading(true);
         try {
-            // First, upload the photo to R2
-            const photoFormData = new FormData();
-            photoFormData.append('file', photoFile);
-            
             const sanitizedName = name.replace(/[^a-zA-Z0-9_\-]/g, '_');
             const photoFilename = `${sanitizedName}_${Date.now()}.${photoFile.name.split('.').pop()}`;
-            
-            const photoResponse = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(photoFilename)}&folder=${encodeURIComponent(folder + '/photos')}`,
-                {
-                    method: 'POST',
-                    body: photoFile,
-                }
-            );
 
-            if (!photoResponse.ok) {
-                throw new Error('Failed to upload photo');
-            }
-
-            const photoData = await photoResponse.json();
+            const photoData = await uploadToBlob(photoFile, photoFilename, `${folder}/photos`);
             const photoUrl = photoData.url;
 
-            // Now create the person JSON with the photo URL
             const personData = {
                 person: {
                     name: name.trim(),
@@ -133,23 +117,12 @@ const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
             const fileName = `${sanitizedName}.json`;
             const jsonBlob = new Blob([JSON.stringify(personData, null, 2)], { type: 'application/json' });
 
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=${encodeURIComponent(folder)}`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            await uploadToBlob(jsonBlob, fileName, folder, { contentType: 'application/json' });
 
-            if (response.ok) {
-                alert('Person added successfully!');
-                setShowAddForm(false);
-                resetForm();
-                await fetchPersons();
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to add person');
-            }
+            alert('Person added successfully!');
+            setShowAddForm(false);
+            resetForm();
+            await fetchPersons();
         } catch (error) {
             console.error('Error adding person:', error);
             alert(error instanceof Error ? error.message : 'Error adding person!');
@@ -169,15 +142,12 @@ const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
             );
 
             if (response.ok) {
-                // Also try to delete the photo if it's stored in R2
-                if (person.photo.includes('r2.dev')) {
-                    const photoPathname = person.photo.split('.dev/')[1];
-                    if (photoPathname) {
-                        await fetch(
-                            `/api/blob/delete?pathname=${encodeURIComponent(photoPathname)}`,
-                            { method: 'DELETE' }
-                        );
-                    }
+                const photoPathname = pathnameFromPublicUrl(person.photo);
+                if (photoPathname) {
+                    await fetch(
+                        `/api/blob/delete?pathname=${encodeURIComponent(photoPathname)}`,
+                        { method: 'DELETE' }
+                    );
                 }
                 await fetchPersons();
             } else {
@@ -209,8 +179,9 @@ const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
 
     const updateOrders = async (newPersons: Person[]) => {
         try {
-            // Update order for all persons
-            const updatePromises = newPersons.map(async (person, idx) => {
+            // Sequential updates avoid delete-all-then-race losing people if one upload fails
+            for (let idx = 0; idx < newPersons.length; idx++) {
+                const person = newPersons[idx];
                 const personData = {
                     person: {
                         name: person.name,
@@ -220,21 +191,13 @@ const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
                     }
                 };
 
-                // Delete old
-                await fetch(`/api/blob/delete?pathname=${encodeURIComponent(person.pathname)}`, { method: 'DELETE' });
-                
-                // Upload new with updated order
                 const jsonBlob = new Blob([JSON.stringify(personData, null, 2)], { type: 'application/json' });
-                return fetch(
-                    `/api/blob/upload?filename=${encodeURIComponent(person.filename)}&folder=${encodeURIComponent(folder)}`,
-                    {
-                        method: 'POST',
-                        body: jsonBlob,
-                    }
-                );
-            });
+                await uploadToBlob(jsonBlob, person.filename, folder, {
+                    overwrite: true,
+                    contentType: 'application/json',
+                });
+            }
 
-            await Promise.all(updatePromises);
             await fetchPersons();
         } catch (error) {
             console.error('Error updating orders:', error);

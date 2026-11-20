@@ -11,8 +11,10 @@ export async function GET(
 
         console.log('Looking for news article:', fileName);
 
-        // Get from R2 storage
-        const files = await listFromR2(`news/${fileName}`);
+        // Prefer exact key match; list prefix can return unrelated siblings
+        const files = (await listFromR2(`news/${fileName}`)).filter(
+            (file) => file.pathname === `news/${fileName}` || file.filename === fileName
+        );
 
         console.log('Found files:', files.length);
 
@@ -24,11 +26,16 @@ export async function GET(
             );
         }
 
-        // Fetch the JSON content from the R2 URL
         console.log('Fetching from R2 URL:', files[0].url);
         const response = await fetch(files[0].url);
+        if (!response.ok) {
+            return NextResponse.json(
+                { error: 'News article not found' },
+                { status: 404 }
+            );
+        }
         const jsonData = await response.json();
-        
+
         console.log('Successfully fetched news article');
         return NextResponse.json(jsonData);
     } catch (error) {

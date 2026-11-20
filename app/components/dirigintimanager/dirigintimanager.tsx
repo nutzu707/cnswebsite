@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ArrowDown, Trash2, Loader2 } from "lucide-react";
+import { uploadToBlob } from "@/lib/upload-client";
 
 interface Diriginte {
     filename: string;
@@ -80,23 +81,12 @@ const DirigintiManager = () => {
             const fileName = `${sanitizedName}_${clasa.replace(/[^a-zA-Z0-9_\-]/g, '_')}.json`;
             const jsonBlob = new Blob([JSON.stringify(diriginteData, null, 2)], { type: 'application/json' });
 
-            const response = await fetch(
-                `/api/blob/upload?filename=${encodeURIComponent(fileName)}&folder=diriginti`,
-                {
-                    method: 'POST',
-                    body: jsonBlob,
-                }
-            );
+            await uploadToBlob(jsonBlob, fileName, 'diriginti', { contentType: 'application/json' });
 
-            if (response.ok) {
-                alert('Diriginte added successfully!');
-                setShowAddForm(false);
-                resetForm();
-                await fetchDiriginti();
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to add diriginte');
-            }
+            alert('Diriginte added successfully!');
+            setShowAddForm(false);
+            resetForm();
+            await fetchDiriginti();
         } catch (error) {
             console.error('Error adding diriginte:', error);
             alert(error instanceof Error ? error.message : 'Error adding diriginte!');
@@ -141,7 +131,8 @@ const DirigintiManager = () => {
 
     const updateOrders = async (newDiriginti: Diriginte[]) => {
         try {
-            const updatePromises = newDiriginti.map(async (diriginte, idx) => {
+            for (let idx = 0; idx < newDiriginti.length; idx++) {
+                const diriginte = newDiriginti[idx];
                 const data = {
                     diriginte: {
                         nume: diriginte.nume,
@@ -151,19 +142,13 @@ const DirigintiManager = () => {
                     }
                 };
 
-                await fetch(`/api/blob/delete?pathname=${encodeURIComponent(diriginte.pathname)}`, { method: 'DELETE' });
-                
                 const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                return fetch(
-                    `/api/blob/upload?filename=${encodeURIComponent(diriginte.filename)}&folder=diriginti`,
-                    {
-                        method: 'POST',
-                        body: jsonBlob,
-                    }
-                );
-            });
+                await uploadToBlob(jsonBlob, diriginte.filename, 'diriginti', {
+                    overwrite: true,
+                    contentType: 'application/json',
+                });
+            }
 
-            await Promise.all(updatePromises);
             await fetchDiriginti();
         } catch (error) {
             console.error('Error updating orders:', error);

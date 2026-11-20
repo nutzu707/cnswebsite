@@ -1,0 +1,13 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://www.cnszalau.ro",
+      "https://cnszalau.ro",
+      "http://localhost:3000"
+    ],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
