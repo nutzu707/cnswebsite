@@ -1,4 +1,14 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, HeadObjectCommand } from '@aws-sdk/client-s3';
+import {
+    S3Client,
+    PutObjectCommand,
+    DeleteObjectCommand,
+    ListObjectsV2Command,
+    HeadObjectCommand,
+    CreateMultipartUploadCommand,
+    UploadPartCommand,
+    CompleteMultipartUploadCommand,
+    AbortMultipartUploadCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Initialize R2 client
@@ -43,7 +53,7 @@ export async function uploadToR2(path: string, file: Buffer | ReadableStream | B
     };
 }
 
-/** Presigned PUT so browsers can upload directly to R2 (avoids Vercel ~4.5MB body limit). */
+/** Presigned PUT so browsers can upload directly to R2 (requires bucket CORS). */
 export async function getPresignedUploadUrl(
     path: string,
     contentType: string,
@@ -62,6 +72,80 @@ export async function getPresignedUploadUrl(
         url: getPublicUrl(path),
         pathname: path,
     };
+}
+
+/** Multipart upload helpers — used to send large files in <4.5MB chunks via the API (no CORS). */
+export async function createMultipartUpload(path: string, contentType: string): Promise<string> {
+    const response = await r2Client.send(
+        new CreateMultipartUploadCommand({
+            Bucket: BUCKET_NAME,
+            Key: path,
+            ContentType: contentType,
+        })
+    );
+
+    if (!response.UploadId) {
+        throw new Error('Failed to create multipart upload');
+    }
+
+    return response.UploadId;
+}
+
+export async function uploadMultipartPart(
+    path: string,
+    uploadId: string,
+    partNumber: number,
+    body: Buffer
+): Promise<{ ETag: string; PartNumber: number }> {
+    const response = await r2Client.send(
+        new UploadPartCommand({
+            Bucket: BUCKET_NAME,
+            Key: path,
+            UploadId: uploadId,
+            PartNumber: partNumber,
+            Body: body,
+        })
+    );
+
+    if (!response.ETag) {
+        throw new Error(`Missing ETag for multipart part ${partNumber}`);
+    }
+
+    return { ETag: response.ETag, PartNumber: partNumber };
+}
+
+export async function completeMultipartUpload(
+    path: string,
+    uploadId: string,
+    parts: { ETag: string; PartNumber: number }[]
+): Promise<{ url: string; pathname: string }> {
+    const sortedParts = [...parts].sort((a, b) => a.PartNumber - b.PartNumber);
+
+    await r2Client.send(
+        new CompleteMultipartUploadCommand({
+            Bucket: BUCKET_NAME,
+            Key: path,
+            UploadId: uploadId,
+            MultipartUpload: {
+                Parts: sortedParts,
+            },
+        })
+    );
+
+    return {
+        url: getPublicUrl(path),
+        pathname: path,
+    };
+}
+
+export async function abortMultipartUpload(path: string, uploadId: string): Promise<void> {
+    await r2Client.send(
+        new AbortMultipartUploadCommand({
+            Bucket: BUCKET_NAME,
+            Key: path,
+            UploadId: uploadId,
+        })
+    );
 }
 
 // List files from R2

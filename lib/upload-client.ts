@@ -1,10 +1,11 @@
 /**
  * Client-side helpers for uploading to R2.
- * Small files go through the API proxy; larger files use presigned URLs
- * so they are not blocked by Vercel's ~4.5MB request body limit.
+ * - Small files: single POST through /api/blob/upload
+ * - Large files: multipart chunks through /api/blob/multipart (avoids Vercel 4.5MB limit + R2 CORS)
  */
 
 const PROXY_UPLOAD_MAX_BYTES = 3.5 * 1024 * 1024;
+const MULTIPART_CHUNK_BYTES = 3 * 1024 * 1024; // under Vercel body limit
 
 export async function parseJsonResponse<T = any>(response: Response): Promise<T> {
     const text = await response.text();
@@ -65,7 +66,7 @@ async function uploadViaProxy(
     return { url: data.url, pathname: data.pathname };
 }
 
-async function uploadViaPresign(
+async function uploadViaMultipart(
     file: Blob | File,
     filename: string,
     folder: string,
@@ -77,52 +78,107 @@ async function uploadViaPresign(
         'application/octet-stream';
     const overwrite = options?.overwrite ? 'true' : 'false';
 
-    const params = new URLSearchParams({
+    const initParams = new URLSearchParams({
+        action: 'init',
         filename,
         folder,
         overwrite,
         contentType,
     });
 
-    const presignResponse = await fetch(`/api/blob/presign?${params.toString()}`, {
+    const initResponse = await fetch(`/api/blob/multipart?${initParams.toString()}`, {
         method: 'POST',
     });
-    const presignData = await parseJsonResponse<{
-        uploadUrl?: string;
-        url?: string;
+    const initData = await parseJsonResponse<{
+        uploadId?: string;
         pathname?: string;
         error?: string;
         details?: string;
-    }>(presignResponse);
+    }>(initResponse);
 
-    if (!presignResponse.ok || !presignData.uploadUrl || !presignData.url || !presignData.pathname) {
-        throw new Error(
-            presignData.error ||
-                presignData.details ||
-                `Failed to prepare upload (${presignResponse.status})`
-        );
+    if (!initResponse.ok || !initData.uploadId || !initData.pathname) {
+        throw new Error(initData.error || initData.details || `Failed to start upload (${initResponse.status})`);
     }
 
-    const uploadResponse = await fetch(presignData.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-            'Content-Type': contentType,
-        },
-    });
+    const { uploadId, pathname } = initData;
+    const parts: { ETag: string; PartNumber: number }[] = [];
 
-    if (!uploadResponse.ok) {
-        const errText = (await uploadResponse.text().catch(() => '')).trim();
-        throw new Error(
-            errText ||
-                `Direct R2 upload failed (${uploadResponse.status}). Ensure the R2 bucket CORS policy allows PUT from this site.`
-        );
+    try {
+        const totalParts = Math.max(1, Math.ceil(file.size / MULTIPART_CHUNK_BYTES));
+
+        for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+            const start = (partNumber - 1) * MULTIPART_CHUNK_BYTES;
+            const end = Math.min(start + MULTIPART_CHUNK_BYTES, file.size);
+            const chunk = file.slice(start, end);
+
+            const partParams = new URLSearchParams({
+                action: 'part',
+                pathname,
+                uploadId,
+                partNumber: String(partNumber),
+            });
+
+            const partResponse = await fetch(`/api/blob/multipart?${partParams.toString()}`, {
+                method: 'POST',
+                body: chunk,
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                },
+            });
+
+            const partData = await parseJsonResponse<{
+                ETag?: string;
+                PartNumber?: number;
+                error?: string;
+                details?: string;
+            }>(partResponse);
+
+            if (!partResponse.ok || !partData.ETag || !partData.PartNumber) {
+                throw new Error(
+                    partData.error ||
+                        partData.details ||
+                        `Failed to upload part ${partNumber}/${totalParts}`
+                );
+            }
+
+            parts.push({ ETag: partData.ETag, PartNumber: partData.PartNumber });
+        }
+
+        const completeResponse = await fetch('/api/blob/multipart?action=complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pathname, uploadId, parts }),
+        });
+
+        const completeData = await parseJsonResponse<{
+            url?: string;
+            pathname?: string;
+            error?: string;
+            details?: string;
+        }>(completeResponse);
+
+        if (!completeResponse.ok || !completeData.url || !completeData.pathname) {
+            throw new Error(
+                completeData.error ||
+                    completeData.details ||
+                    `Failed to finalize upload (${completeResponse.status})`
+            );
+        }
+
+        return { url: completeData.url, pathname: completeData.pathname };
+    } catch (error) {
+        // Best-effort cleanup so incomplete multipart uploads don't pile up in R2
+        try {
+            await fetch('/api/blob/multipart?action=abort', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pathname, uploadId }),
+            });
+        } catch {
+            // ignore abort failures
+        }
+        throw error;
     }
-
-    return {
-        url: presignData.url,
-        pathname: presignData.pathname,
-    };
 }
 
 export async function uploadToBlob(
@@ -132,16 +188,16 @@ export async function uploadToBlob(
     options?: { overwrite?: boolean; contentType?: string }
 ): Promise<UploadResult> {
     if (file.size > PROXY_UPLOAD_MAX_BYTES) {
-        return uploadViaPresign(file, filename, folder, options);
+        return uploadViaMultipart(file, filename, folder, options);
     }
 
     try {
         return await uploadViaProxy(file, filename, folder, options);
     } catch (error) {
         const message = error instanceof Error ? error.message : '';
-        // If the edge/platform rejected the body as too large, fall back to direct upload
-        if (/entity too large|413|too large|non-JSON response: Request En/i.test(message)) {
-            return uploadViaPresign(file, filename, folder, options);
+        // Platform rejected body as too large — retry with chunked multipart
+        if (/entity too large|413|too large|non-JSON response: Request En|Failed to fetch/i.test(message)) {
+            return uploadViaMultipart(file, filename, folder, options);
         }
         throw error;
     }
