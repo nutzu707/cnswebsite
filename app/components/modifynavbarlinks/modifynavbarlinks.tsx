@@ -74,15 +74,14 @@ const ModifyNavbarLinks = () => {
 
     return (
         <div className="w-full">
-            <div className="rounded-xl shadow-lg border-2 p-6 bg-white">
-                <h2 className="text-2xl font-bold mb-6">Configurare Orar (Navbar)</h2>
-                <p className="text-sm text-gray-600 mb-6">
-                    Premiile se gestionează separat din secțiunea <strong>Premii</strong> a dashboard-ului
-                    (pagina publică: <code>/premii</code>).
+            <div className="space-y-4">
+                <p className="text-sm text-gray-600 font-normal">
+                    Premiile se gestionează din secțiunea <strong>Premii</strong>
+                    {" "}(pagina publică: <code>/premii</code>).
                 </p>
 
                 <div className="space-y-3">
-                    <label className="block text-lg font-semibold">Orar (încarcă PDF)</label>
+                    <label className="block text-base font-bold text-indigo-900">Orar (încarcă PDF)</label>
                     <input
                         type="file"
                         accept="application/pdf"
@@ -96,9 +95,9 @@ const ModifyNavbarLinks = () => {
                             <span className="text-sm">Se încarcă...</span>
                         </div>
                     )}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-1">Link curent:</p>
-                        <p className="text-sm text-gray-700 break-all font-mono">
+                    <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-900/10">
+                        <p className="text-xs text-gray-500 mb-1 font-normal">Link curent:</p>
+                        <p className="text-sm text-gray-700 break-all font-mono font-normal">
                             {config.orar || '(Niciun link setat)'}
                         </p>
                     </div>

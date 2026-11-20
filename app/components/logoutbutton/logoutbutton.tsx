@@ -1,9 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
-export default function LogoutButton() {
+interface LogoutButtonProps {
+    compact?: boolean;
+}
+
+export default function LogoutButton({ compact = false }: LogoutButtonProps) {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -18,15 +22,26 @@ export default function LogoutButton() {
         }
     };
 
+    if (compact) {
+        return (
+            <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign out"
+                className="rounded-xl bg-red-500 p-2.5 text-white hover:bg-red-600"
+            >
+                <LogOut className="h-4 w-4" />
+            </button>
+        );
+    }
+
     return (
-        <Button 
-            className="text-xl ml-3 rounded-md shadow-xl bg-red-500 text-white border-2 border-solid hover:bg-red-600 font-bold" 
-            variant="default" 
+        <button
             type="button"
             onClick={handleLogout}
+            className="w-full rounded-xl bg-red-500 px-3 py-2.5 text-sm font-bold text-white hover:bg-red-600"
         >
-            SIGN OUT
-        </Button>
+            Sign out
+        </button>
     );
 }
-

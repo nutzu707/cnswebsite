@@ -6,8 +6,10 @@ import Link from "next/link";
 import NavbarButton from "@/app/components/navbarbutton/navbarbutton";
 import {Button} from "@/components/ui/button";
 import { useState, useEffect  } from "react";
+import { usePathname } from "next/navigation";
 
 const Navbar: React.FC = () => {
+    const pathname = usePathname();
     const [navbarLinks, setNavbarLinks] = useState({
         orar: "",
     });
@@ -68,6 +70,14 @@ const Navbar: React.FC = () => {
         setIsMenuOpen((prevState) => !prevState);
     };
 
+    const closeMenu = () => {
+        setIsMenuOpen(false);
+    };
+
+    useEffect(() => {
+        setIsMenuOpen(false);
+    }, [pathname]);
+
 
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
@@ -87,7 +97,7 @@ const Navbar: React.FC = () => {
             
             <div className=" w-full lg:justify-center items-center flex">
                 <div className="z-50 ">
-                    <Link href="/">
+                    <Link href="/" onClick={closeMenu}>
                         <Image
                             src="/websiteUI/logo.png"
                             alt="Logo"
@@ -172,8 +182,12 @@ const Navbar: React.FC = () => {
                 </button>
                 <div
                     className={`fixed top-0 left-0 w-full flex h-full z-10 bg-white transition-all duration-500 transform ${
-                        isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-100"
+                        isMenuOpen ? "translate-x-0 opacity-100 pointer-events-auto" : "translate-x-full opacity-100 pointer-events-none"
                     }`}
+                    onClick={(event) => {
+                        const anchor = (event.target as HTMLElement).closest("a");
+                        if (anchor) closeMenu();
+                    }}
                 >
                     <div className="content-center ml-8 text-3xl font-bold h-full">
                        <Link href="/prezentare"><p>Prezentare</p></Link>

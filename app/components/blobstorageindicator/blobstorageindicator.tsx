@@ -10,7 +10,11 @@ interface StorageUsage {
     filesCount: number;
 }
 
-const BlobStorageIndicator = () => {
+interface BlobStorageIndicatorProps {
+    compact?: boolean;
+}
+
+const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) => {
     const [usage, setUsage] = useState<StorageUsage | null>(null);
     const [loading, setLoading] = useState(true);
     const [corsMessage, setCorsMessage] = useState<string | null>(null);
@@ -19,11 +23,11 @@ const BlobStorageIndicator = () => {
     const fetchUsage = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/blob/usage');
+            const response = await fetch("/api/blob/usage");
             const data = await response.json();
             setUsage(data);
         } catch (error) {
-            console.error('Error fetching storage usage:', error);
+            console.error("Error fetching storage usage:", error);
         } finally {
             setLoading(false);
         }
@@ -31,28 +35,27 @@ const BlobStorageIndicator = () => {
 
     const ensureCors = async () => {
         try {
-            const response = await fetch('/api/blob/setup-cors', { method: 'POST' });
+            const response = await fetch("/api/blob/setup-cors", { method: "POST" });
             const data = await response.json();
             setCorsOk(Boolean(data.ok));
             setCorsMessage(data.message || null);
         } catch (error) {
             setCorsOk(false);
-            setCorsMessage(error instanceof Error ? error.message : 'Failed to configure R2 CORS');
+            setCorsMessage(error instanceof Error ? error.message : "Failed to configure R2 CORS");
         }
     };
 
     useEffect(() => {
         fetchUsage();
         ensureCors();
-
         const interval = setInterval(fetchUsage, 30000);
         return () => clearInterval(interval);
     }, []);
 
     if (loading) {
         return (
-            <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-6 rounded-2xl border-2 bg-white">
-                <p className="text-xl">Loading storage usage...</p>
+            <div className="rounded-2xl border border-indigo-900/10 bg-white p-5 shadow-sm">
+                <p className="text-sm text-gray-600">Se încarcă stocarea...</p>
             </div>
         );
     }
@@ -62,39 +65,35 @@ const BlobStorageIndicator = () => {
     }
 
     const getColorClass = () => {
-        if (usage.percentageUsed < 50) return "bg-green-500";
-        if (usage.percentageUsed < 80) return "bg-yellow-500";
+        if (usage.percentageUsed < 50) return "bg-emerald-500";
+        if (usage.percentageUsed < 80) return "bg-amber-500";
         return "bg-red-500";
     };
 
     return (
-        <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-6 rounded-2xl border-2 bg-white">
-            <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+        <div className="rounded-2xl border border-indigo-900/10 bg-white p-5 shadow-sm">
+            <div className={`flex ${compact ? "flex-col gap-4" : "flex-col lg:flex-row lg:items-center"} gap-4`}>
                 <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-indigo-900 mb-2">Storage Available</h3>
-                    <p className="text-lg">
-                        <span className="font-bold">{usage.totalMB.toFixed(2)} MB</span> of{" "}
-                        <span className="font-bold">{usage.storageLimit.toFixed(0)} MB</span> used
-                    </p>
-                    <p className="text-md text-gray-600">
-                        {usage.filesCount} file{usage.filesCount !== 1 ? 's' : ''} stored
+                    <h3 className="text-lg font-bold text-indigo-900">Stocare R2</h3>
+                    <p className="mt-1 text-sm text-gray-600 font-normal">
+                        <span className="font-bold text-indigo-950">{usage.totalMB.toFixed(2)} MB</span>
+                        {" "}din{" "}
+                        <span className="font-bold text-indigo-950">{usage.storageLimit.toFixed(0)} MB</span>
+                        {" · "}
+                        {usage.filesCount} fișiere
                     </p>
                 </div>
 
                 <div className="flex-1 w-full">
-                    <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                    <div className="w-full bg-indigo-50 rounded-full h-3 overflow-hidden">
                         <div
-                            className={`h-full ${getColorClass()} transition-all duration-500 flex items-center justify-center text-white text-sm font-bold`}
+                            className={`h-full ${getColorClass()} transition-all duration-500`}
                             style={{ width: `${Math.min(usage.percentageUsed, 100)}%` }}
-                        >
-                            {usage.percentageUsed > 10 && `${usage.percentageUsed.toFixed(1)}%`}
-                        </div>
+                        />
                     </div>
-                    {usage.percentageUsed < 10 && (
-                        <p className="text-sm text-gray-600 mt-1 text-center">
-                            {usage.percentageUsed.toFixed(1)}% used
-                        </p>
-                    )}
+                    <p className="text-xs text-gray-500 mt-2 font-normal">
+                        {usage.percentageUsed.toFixed(1)}% utilizat
+                    </p>
                 </div>
 
                 <button
@@ -102,7 +101,7 @@ const BlobStorageIndicator = () => {
                         fetchUsage();
                         ensureCors();
                     }}
-                    className="px-4 py-2 bg-indigo-900 text-white rounded-md hover:bg-indigo-950 font-bold"
+                    className="self-start rounded-xl bg-indigo-900 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-950"
                 >
                     Refresh
                 </button>
@@ -110,31 +109,20 @@ const BlobStorageIndicator = () => {
 
             {corsMessage && (
                 <div
-                    className={`mt-4 p-3 border-2 rounded-lg ${
+                    className={`mt-4 rounded-xl border px-3 py-2 text-sm ${
                         corsOk
-                            ? 'bg-green-50 border-green-500 text-green-800'
-                            : 'bg-amber-50 border-amber-500 text-amber-900'
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : "border-amber-200 bg-amber-50 text-amber-900"
                     }`}
                 >
-                    <p className="font-semibold">
-                        {corsOk ? 'R2 uploads ready' : 'R2 CORS needs attention'}
-                    </p>
-                    <p className="text-sm mt-1">{corsMessage}</p>
-                    {!corsOk && (
-                        <p className="text-sm mt-2">
-                            In Cloudflare → R2 → your bucket → Settings → CORS, paste the rules from
-                            <code className="mx-1">r2-cors.json</code>
-                            (allow PUT from https://www.cnszalau.ro).
-                        </p>
-                    )}
+                    <p className="font-bold">{corsOk ? "Upload-uri R2 pregătite" : "CORS R2 necesită atenție"}</p>
+                    <p className="mt-1 font-normal">{corsMessage}</p>
                 </div>
             )}
 
             {usage.percentageUsed > 80 && (
-                <div className="mt-4 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
-                    <p className="text-red-800 font-bold">
-                        Warning: You&apos;re approaching your storage limit!
-                    </p>
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 font-bold">
+                    Aproape de limita de stocare.
                 </div>
             )}
         </div>
