@@ -17,8 +17,6 @@ interface BlobStorageIndicatorProps {
 const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) => {
     const [usage, setUsage] = useState<StorageUsage | null>(null);
     const [loading, setLoading] = useState(true);
-    const [corsMessage, setCorsMessage] = useState<string | null>(null);
-    const [corsOk, setCorsOk] = useState<boolean | null>(null);
 
     const fetchUsage = async () => {
         try {
@@ -33,21 +31,10 @@ const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) =>
         }
     };
 
-    const ensureCors = async () => {
-        try {
-            const response = await fetch("/api/blob/setup-cors", { method: "POST" });
-            const data = await response.json();
-            setCorsOk(Boolean(data.ok));
-            setCorsMessage(data.message || null);
-        } catch (error) {
-            setCorsOk(false);
-            setCorsMessage(error instanceof Error ? error.message : "Failed to configure R2 CORS");
-        }
-    };
-
     useEffect(() => {
         fetchUsage();
-        ensureCors();
+        // Quietly ensure CORS in the background — no UI status banners
+        fetch("/api/blob/setup-cors", { method: "POST" }).catch(() => {});
         const interval = setInterval(fetchUsage, 30000);
         return () => clearInterval(interval);
     }, []);
@@ -74,7 +61,7 @@ const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) =>
         <div className="rounded-2xl border border-indigo-900/10 bg-white p-5 shadow-sm">
             <div className={`flex ${compact ? "flex-col gap-4" : "flex-col lg:flex-row lg:items-center"} gap-4`}>
                 <div className="flex-1">
-                    <h3 className="text-lg font-bold text-indigo-900">Stocare R2</h3>
+                    <h3 className="text-lg font-bold text-indigo-900">Stocare</h3>
                     <p className="mt-1 text-sm text-gray-600 font-normal">
                         <span className="font-bold text-indigo-950">{usage.totalMB.toFixed(2)} MB</span>
                         {" "}din{" "}
@@ -97,28 +84,12 @@ const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) =>
                 </div>
 
                 <button
-                    onClick={() => {
-                        fetchUsage();
-                        ensureCors();
-                    }}
+                    onClick={fetchUsage}
                     className="self-start rounded-xl bg-indigo-900 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-950"
                 >
                     Refresh
                 </button>
             </div>
-
-            {corsMessage && (
-                <div
-                    className={`mt-4 rounded-xl border px-3 py-2 text-sm ${
-                        corsOk
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                            : "border-amber-200 bg-amber-50 text-amber-900"
-                    }`}
-                >
-                    <p className="font-bold">{corsOk ? "Upload-uri R2 pregătite" : "CORS R2 necesită atenție"}</p>
-                    <p className="mt-1 font-normal">{corsMessage}</p>
-                </div>
-            )}
 
             {usage.percentageUsed > 80 && (
                 <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 font-bold">

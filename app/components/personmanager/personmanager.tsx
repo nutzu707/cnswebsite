@@ -19,9 +19,10 @@ interface PersonManagerProps {
     folder: string;
     title: string;
     apiEndpoint: string; // e.g., '/api/conducere'
+    hideTitle?: boolean;
 }
 
-const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
+const PersonManager = ({ folder, title, apiEndpoint, hideTitle = false }: PersonManagerProps) => {
     const [persons, setPersons] = useState<Person[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -207,13 +208,13 @@ const PersonManager = ({ folder, title, apiEndpoint }: PersonManagerProps) => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">{title}</h2>
+            <div className={`flex items-center ${hideTitle ? 'justify-end' : 'justify-between'}`}>
+                {!hideTitle && <h2 className="text-2xl font-bold">{title}</h2>}
                 <Button
                     onClick={toggleForm}
-                    className="rounded-md shadow-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    className="rounded-xl bg-indigo-900 text-white hover:bg-indigo-950"
                 >
-                    {showAddForm ? 'Cancel' : 'Add Person'}
+                    {showAddForm ? 'Anulează' : 'Adaugă persoană'}
                 </Button>
             </div>
 

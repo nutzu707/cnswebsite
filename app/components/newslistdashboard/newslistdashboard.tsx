@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { ExternalLink, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { parseJsonResponse } from "@/lib/upload-client";
 
 interface NewsArticle {
@@ -19,8 +19,9 @@ const NewsListDashboard = () => {
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
+        if (Number.isNaN(date.getTime())) return dateString;
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
@@ -28,11 +29,11 @@ const NewsListDashboard = () => {
     const fetchArticles = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/news');
+            const response = await fetch("/api/news");
             const data = await response.json();
             setArticles(data.newsItems || []);
         } catch (error) {
-            console.error('Error fetching news:', error);
+            console.error("Error fetching news:", error);
             setArticles([]);
         } finally {
             setLoading(false);
@@ -41,90 +42,94 @@ const NewsListDashboard = () => {
 
     useEffect(() => {
         fetchArticles();
+        const onChanged = () => fetchArticles();
+        window.addEventListener("dashboard-news-changed", onChanged);
+        return () => window.removeEventListener("dashboard-news-changed", onChanged);
     }, []);
 
     const handleDelete = async (article: NewsArticle) => {
-        if (!confirm(`Are you sure you want to delete "${article.title}"?`)) {
-            return;
-        }
+        if (!confirm(`Ștergi „${article.title}”?`)) return;
 
         try {
-            // Use pathname if available, otherwise extract from URL
-            const deleteParam = article.pathname 
+            const deleteParam = article.pathname
                 ? `pathname=${encodeURIComponent(article.pathname)}`
                 : `url=${encodeURIComponent(article.url)}`;
-            
-            console.log('Deleting article:', deleteParam);
-            const response = await fetch(
-                `/api/blob/delete?${deleteParam}`,
-                { method: 'DELETE' }
-            );
-
-            if (response.ok) {
-                console.log('Delete successful');
-                await fetchArticles();
-                alert('Article deleted successfully!');
-            } else {
+            const response = await fetch(`/api/blob/delete?${deleteParam}`, { method: "DELETE" });
+            if (!response.ok) {
                 const errorData = await parseJsonResponse<{ error?: string }>(response);
-                throw new Error(errorData.error || 'Delete failed');
+                throw new Error(errorData.error || "Delete failed");
             }
+            await fetchArticles();
         } catch (error) {
-            console.error('Error deleting article:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to delete article';
-            alert(errorMessage);
+            alert(error instanceof Error ? error.message : "Failed to delete article");
         }
     };
 
     return (
-        <div>
-            <div className="flex justify-end mb-4">
-                <Button
+        <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-indigo-900">Publicate</p>
+                <button
                     type="button"
                     onClick={fetchArticles}
-                    className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-gray-200 font-bold"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-900/15 px-2.5 py-1.5 text-xs font-bold text-indigo-900 hover:bg-indigo-50"
                 >
+                    <RefreshCw className="h-3.5 w-3.5" />
                     Refresh
-                </Button>
+                </button>
             </div>
 
-            <div className="h-[300px] overflow-y-scroll pr-5">
-                {loading ? (
-                    <div className="text-xl">Loading...</div>
-                ) : articles.length === 0 ? (
-                    <div className="text-xl">No articles available</div>
-                ) : (
-                    <ul>
-                        {articles.map((article, index) => (
-                            <li key={index} className="flex w-full border-t-2 text-2xl py-4">
-                                <div className="flex-1 break-all content-center">
-                                    <div className="font-bold">{article.title}</div>
-                                    <div className="text-sm text-gray-600 font-semibold mt-1">
-                                        {formatDate(article.date)}
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 content-center">
-                                    <Button
-                                        onClick={() => window.open(article.link, '_blank')}
-                                        className="text-xl rounded-md shadow-xl bg-blue-600 text-white border-2 border-solid hover:bg-blue-700 font-bold"
-                                    >
-                                        View
-                                    </Button>
-                                    <Button
-                                        onClick={() => handleDelete(article)}
-                                        className="text-xl rounded-md shadow-xl bg-white text-black border-2 border-solid hover:bg-red-200 font-bold"
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-                <hr className="solid border-t-2" />
-            </div>
+            {loading ? (
+                <div className="flex items-center gap-2 py-8 text-sm text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Se încarcă...
+                </div>
+            ) : articles.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-indigo-900/15 px-4 py-10 text-center text-sm text-gray-500">
+                    Niciun anunț publicat.
+                </p>
+            ) : (
+                <ul className="space-y-2 max-h-[640px] overflow-y-auto">
+                    {articles.map((article, index) => (
+                        <li
+                            key={`${article.url}-${index}`}
+                            className="flex items-center gap-3 rounded-xl border border-indigo-900/10 bg-indigo-50/30 px-3 py-3"
+                        >
+                            {article.image && (
+                                <img
+                                    src={article.image}
+                                    alt=""
+                                    className="h-14 w-20 rounded-lg object-cover shrink-0"
+                                />
+                            )}
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-bold text-indigo-950">{article.title}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{formatDate(article.date)}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => window.open(article.link, "_blank")}
+                                    className="rounded-lg p-2 text-indigo-900 hover:bg-white"
+                                    title="Vezi"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDelete(article)}
+                                    className="rounded-lg p-2 text-red-600 hover:bg-red-50"
+                                    title="Șterge"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 };
 
 export default NewsListDashboard;
-

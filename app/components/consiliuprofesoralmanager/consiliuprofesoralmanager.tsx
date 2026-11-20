@@ -13,7 +13,7 @@ interface Profesor {
     order?: number;
 }
 
-const ConsiliuProfesoralManager = () => {
+const ConsiliuProfesoralManager = ({ hideTitle = false }: { hideTitle?: boolean }) => {
     const [profesori, setProfesori] = useState<Profesor[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -150,13 +150,13 @@ const ConsiliuProfesoralManager = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Consiliu Profesoral</h2>
+            <div className={`flex items-center ${hideTitle ? 'justify-end' : 'justify-between'}`}>
+                {!hideTitle && <h2 className="text-2xl font-bold">Consiliu Profesoral</h2>}
                 <Button
                     onClick={toggleForm}
-                    className="rounded-md shadow-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                    className="rounded-xl bg-indigo-900 text-white hover:bg-indigo-950"
                 >
-                    {showAddForm ? 'Cancel' : 'Add Profesor'}
+                    {showAddForm ? 'Anulează' : 'Adaugă profesor'}
                 </Button>
             </div>
 
