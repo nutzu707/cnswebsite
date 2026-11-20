@@ -25,12 +25,11 @@ export async function GET() {
         // Return default config if not found
         return NextResponse.json({
             orar: '',
-            premii: ''
         });
     } catch (error) {
         console.error('Error fetching navbar links:', error);
         return NextResponse.json(
-            { orar: '', premii: '' },
+            { orar: '' },
             { status: 200 }
         );
     }

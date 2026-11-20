@@ -6,13 +6,12 @@ import { uploadToBlob } from '@/lib/upload-client';
 
 interface NavbarLinksConfig {
     orar: string;
-    premii: string;
 }
 
 const ModifyNavbarLinks = () => {
-    const [config, setConfig] = useState<NavbarLinksConfig>({ orar: '', premii: '' });
+    const [config, setConfig] = useState<NavbarLinksConfig>({ orar: '' });
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         fetchConfig();
@@ -23,7 +22,7 @@ const ModifyNavbarLinks = () => {
             const response = await fetch('/api/navbar-links');
             if (response.ok) {
                 const data = await response.json();
-                setConfig(data);
+                setConfig({ orar: data.orar || '' });
             }
         } catch (error) {
             console.error('Error loading navbar config:', error);
@@ -33,45 +32,35 @@ const ModifyNavbarLinks = () => {
     };
 
     const saveConfig = async (nextConfig: NavbarLinksConfig) => {
-        try {
-            const jsonBlob = new Blob([JSON.stringify(nextConfig, null, 2)], {
-                type: 'application/json',
-            });
+        const jsonBlob = new Blob([JSON.stringify(nextConfig, null, 2)], {
+            type: 'application/json',
+        });
 
-            await uploadToBlob(jsonBlob, 'navbar-config.json', 'navbar-links', {
-                overwrite: true,
-                contentType: 'application/json',
-            });
+        await uploadToBlob(jsonBlob, 'navbar-config.json', 'navbar-links', {
+            overwrite: true,
+            contentType: 'application/json',
+        });
 
-            setConfig(nextConfig);
-            await fetchConfig();
-            return true;
-        } catch (error) {
-            console.error('Error saving config:', error);
-            throw error;
-        }
+        setConfig(nextConfig);
+        await fetchConfig();
     };
 
-    const handleFileUpload = async (field: keyof NavbarLinksConfig, file: File) => {
+    const handleFileUpload = async (file: File) => {
         try {
-            setUploading(field);
+            setUploading(true);
             const safeName = file.name.replace(/\s+/g, '_');
 
             const result = await uploadToBlob(file, safeName, 'navbar-links', {
                 overwrite: true,
             });
 
-            const nextConfig = {
-                ...config,
-                [field]: result.url,
-            };
-            await saveConfig(nextConfig);
+            await saveConfig({ orar: result.url });
             alert('Încărcat și salvat cu succes! Refresh pagina pentru a vedea schimbările.');
         } catch (error) {
             console.error('Upload failed', error);
             alert(`Încărcarea a eșuat: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
-            setUploading(null);
+            setUploading(false);
         }
     };
 
@@ -86,53 +75,32 @@ const ModifyNavbarLinks = () => {
     return (
         <div className="w-full">
             <div className="rounded-xl shadow-lg border-2 p-6 bg-white">
-                <h2 className="text-2xl font-bold mb-6">Configurare Linkuri Navbar</h2>
-                
-                <div className="space-y-6">
-                    <div className="space-y-3">
-                        <label className="block text-lg font-semibold">Orar (încarcă PDF)</label>
-                        <input
-                            type="file"
-                            accept="application/pdf"
-                            disabled={uploading !== null}
-                            onChange={(e) => e.target.files && handleFileUpload('orar', e.target.files[0])}
-                            className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                        {uploading === 'orar' && (
-                            <div className="flex items-center gap-2 text-indigo-600">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span className="text-sm">Se încarcă...</span>
-                            </div>
-                        )}
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="text-xs text-gray-500 mb-1">Link curent:</p>
-                            <p className="text-sm text-gray-700 break-all font-mono">
-                                {config.orar || '(Niciun link setat)'}
-                            </p>
-                        </div>
-                    </div>
+                <h2 className="text-2xl font-bold mb-6">Configurare Orar (Navbar)</h2>
+                <p className="text-sm text-gray-600 mb-6">
+                    Premiile se gestionează separat din secțiunea <strong>Premii</strong> a dashboard-ului
+                    (pagina publică: <code>/premii</code>).
+                </p>
 
-                    <div className="space-y-3">
-                        <label className="block text-lg font-semibold">Premii (încarcă PDF)</label>
-                        <input
-                            type="file"
-                            accept="application/pdf"
-                            disabled={uploading !== null}
-                            onChange={(e) => e.target.files && handleFileUpload('premii', e.target.files[0])}
-                            className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                        {uploading === 'premii' && (
-                            <div className="flex items-center gap-2 text-indigo-600">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span className="text-sm">Se încarcă...</span>
-                            </div>
-                        )}
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="text-xs text-gray-500 mb-1">Link curent:</p>
-                            <p className="text-sm text-gray-700 break-all font-mono">
-                                {config.premii || '(Niciun link setat)'}
-                            </p>
+                <div className="space-y-3">
+                    <label className="block text-lg font-semibold">Orar (încarcă PDF)</label>
+                    <input
+                        type="file"
+                        accept="application/pdf"
+                        disabled={uploading}
+                        onChange={(e) => e.target.files && handleFileUpload(e.target.files[0])}
+                        className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {uploading && (
+                        <div className="flex items-center gap-2 text-indigo-600">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-sm">Se încarcă...</span>
                         </div>
+                    )}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500 mb-1">Link curent:</p>
+                        <p className="text-sm text-gray-700 break-all font-mono">
+                            {config.orar || '(Niciun link setat)'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -141,4 +109,3 @@ const ModifyNavbarLinks = () => {
 };
 
 export default ModifyNavbarLinks;
-

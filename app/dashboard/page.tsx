@@ -59,6 +59,10 @@ export default async function Dashboard() {
                     <DocumentsListBlob folder="documents/cjex-salaj" />
                 </div>
 
+                <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="premii">
+                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">PREMII</p>
+                    <DocumentsListBlob folder="documents/premii" />
+                </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="anunturi">
                     <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ANUNTURI</p>
@@ -103,7 +107,7 @@ export default async function Dashboard() {
                 </div>
 
                 <div className="lg:w-[1000px] w-full self-center mt-16 shadow-2xl p-10 rounded-2xl border-2 text-2xl font-bold" id="navbar-links">
-                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">LINKURI NAVBAR (ORAR & PREMII)</p>
+                    <p className="lg:text-5xl text-3xl font-bold text-indigo-900 mb-4">ORAR (NAVBAR)</p>
                     <ModifyNavbarLinks/>
                     <div className="w-full flex justify-end mb-8 mt-8">
                         <RefreshButton/>

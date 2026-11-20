@@ -10,7 +10,6 @@ import { useState, useEffect  } from "react";
 const Navbar: React.FC = () => {
     const [navbarLinks, setNavbarLinks] = useState({
         orar: "",
-        premii: ""
     });
 
     useEffect(() => {
@@ -19,7 +18,7 @@ const Navbar: React.FC = () => {
                 const response = await fetch('/api/navbar-links');
                 if (response.ok) {
                     const data = await response.json();
-                    setNavbarLinks(data);
+                    setNavbarLinks({ orar: data.orar || "" });
                 }
             } catch (error) {
                 console.error('Error loading navbar config:', error);
@@ -37,7 +36,7 @@ const Navbar: React.FC = () => {
     const eleviOptions = [
         { title: "Documente", link: "/elevi-documente" },
         ...(navbarLinks.orar ? [{ title: "Orar", link: navbarLinks.orar }] : []),
-        ...(navbarLinks.premii ? [{ title: "Premii", link: navbarLinks.premii }] : []),
+        { title: "Premii", link: "/premii" },
         { title: "CJEX Sălaj", link: "/cjex-salaj" },
     ];
     const profesoriOptions = [
@@ -211,7 +210,7 @@ const Navbar: React.FC = () => {
                             <div className="text-xl">
                                 <Link href="/elevi-documente"><p>Documente</p></Link>
                                 {navbarLinks.orar && <a href={navbarLinks.orar} target="_blank" rel="noopener noreferrer"><p>Orar</p></a>}
-                                {navbarLinks.premii && <a href={navbarLinks.premii} target="_blank" rel="noopener noreferrer"><p>Premii</p></a>}
+                                <Link href="/premii"><p>Premii</p></Link>
                                 <Link href="/cjex-salaj"><p>CJEX Sălaj</p></Link>
                             </div>
                         </div>
