@@ -18,7 +18,13 @@ interface DocumentsListBlobPublicProps {
     extraFiles?: BlobFile[];
 }
 
-const DocumentsListBlobPublic = ({ folder, extraFiles = [] }: DocumentsListBlobPublicProps) => {
+/** Stable default — inline `[]` would retrigger the fetch effect every render. */
+const EMPTY_EXTRA_FILES: BlobFile[] = [];
+
+const DocumentsListBlobPublic = ({
+    folder,
+    extraFiles = EMPTY_EXTRA_FILES,
+}: DocumentsListBlobPublicProps) => {
     const [files, setFiles] = useState<BlobFile[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -31,24 +37,30 @@ const DocumentsListBlobPublic = ({ folder, extraFiles = [] }: DocumentsListBlobP
     };
 
     useEffect(() => {
+        let cancelled = false;
+
         const fetchFiles = async () => {
             try {
                 setLoading(true);
                 const response = await fetch(`/api/blob/list?folder=${encodeURIComponent(folder)}`);
                 const data = await response.json();
+                if (cancelled) return;
                 const fromFolder: BlobFile[] = data.files || [];
                 const folderPathnames = new Set(fromFolder.map((f) => f.pathname));
                 const extras = extraFiles.filter((f) => !folderPathnames.has(f.pathname));
                 setFiles([...fromFolder, ...extras]);
             } catch (error) {
                 console.error('Error fetching files:', error);
-                setFiles(extraFiles);
+                if (!cancelled) setFiles(extraFiles);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchFiles();
+        return () => {
+            cancelled = true;
+        };
     }, [folder, extraFiles]);
 
     if (loading) {
