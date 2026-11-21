@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import PageBody from "@/app/components/pagebody/pagebody";
 import PageTitle from "@/app/components/pagetitle/pagetitle";
 import Footer from "@/app/components/footer/footer";
-import { Expand, X } from "lucide-react";
+import { X } from "lucide-react";
 
 interface Profesor {
     nume: string;
@@ -62,7 +62,7 @@ const ConsiliuProfesoral = () => {
                 <PageTitle text="CONSILIU PROFESORAL"></PageTitle>
 
                 <figure
-                    className="mt-12 lg:mt-16 w-full lg:w-[1000px] self-center animate-fadeIn opacity-0"
+                    className="mt-12 w-full animate-fadeIn self-center opacity-0 lg:mt-16"
                     style={{ animationDelay: "0ms" }}
                 >
                     <button
@@ -72,17 +72,14 @@ const ConsiliuProfesoral = () => {
                         aria-label="Mărește fotografia consiliului profesoral"
                     >
                         <img
-                            src={GROUP_PHOTO_SRC}
+                            src={`${GROUP_PHOTO_SRC}?v=2`}
                             alt={GROUP_PHOTO_ALT}
-                            width={1024}
-                            height={680}
+                            width={1600}
+                            height={617}
                             className="block h-auto w-full object-contain"
                             loading="eager"
+                            decoding="async"
                         />
-                        <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-gradient-to-t from-black/55 via-black/25 to-transparent px-4 pb-3 pt-10 text-sm font-semibold text-white opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
-                            <Expand className="h-4 w-4" aria-hidden />
-                            Apasă pentru a vedea toți profesorii mai clar
-                        </span>
                     </button>
                     <figcaption className="mt-3 text-center text-sm text-gray-500 lg:text-base">
                         Consiliul profesoral — Colegiul Național „Silvania” Zalău
@@ -149,10 +146,10 @@ const ConsiliuProfesoral = () => {
                         onClick={(event) => event.stopPropagation()}
                     >
                         <img
-                            src={GROUP_PHOTO_SRC}
+                            src={`${GROUP_PHOTO_SRC}?v=2`}
                             alt={GROUP_PHOTO_ALT}
-                            width={1024}
-                            height={680}
+                            width={1600}
+                            height={617}
                             className="mx-auto h-auto w-full max-w-none object-contain md:min-w-[900px]"
                         />
                     </div>
