@@ -94,13 +94,13 @@ const DocumentsListBlobPublic = ({
                                     href={file.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-indigo-900 hover:shadow-md transition-all duration-300"
+                                    className="group flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 bg-brand-paper hover:border-indigo-900 hover:shadow-md transition-all duration-300"
                                 >
                                     <div className="bg-indigo-50 p-2 rounded-lg group-hover:bg-indigo-900 transition-colors duration-300">
                                         <FileText className="w-6 h-6 text-indigo-900 group-hover:text-white transition-colors duration-300" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-lg lg:text-xl font-bold text-gray-900 break-words group-hover:text-indigo-900 transition-colors duration-300">
+                                        <div className="break-words text-lg font-bold text-gray-900 transition-colors duration-300 group-hover:text-indigo-900 lg:text-xl">
                                             {file.filename}
                                         </div>
                                         <div className="text-sm text-gray-500 mt-1">

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import colors from "tailwindcss/colors"
 
 const config = {
   darkMode: ["class"],
@@ -52,18 +53,41 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom school brand colors - easy to change!
+        // Hero palette — remaps existing indigo/gray utilities site-wide
+        indigo: {
+          ...colors.indigo,
+          50: "#F2F2F7",
+          100: "#E4E5EF",
+          200: "#C9CBDC",
+          300: "#A8ABC4",
+          400: "#7E82A8",
+          500: "#5B5F8C",
+          600: "#45497A",
+          700: "#3A3D6E",
+          800: "#333560",
+          900: "#2E3171",
+          950: "#23254F",
+        },
+        gray: {
+          ...colors.gray,
+          50: "#FAF7F3",
+          100: "#F3EDE6",
+          200: "#E5DDD4",
+          300: "#D4C8BC",
+          400: "#B5A598",
+          500: "#958679",
+          600: "#6B635C",
+          700: "#4A443E",
+          800: "#2F2B27",
+          900: "#1C1917",
+          950: "#12100E",
+        },
         brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          cream: "#F7F3EE",
+          navy: "#2E3171",
+          "navy-dark": "#23254F",
+          sepia: "#8B6D67",
+          paper: "#FFFCFA",
         },
       },
       borderRadius: {

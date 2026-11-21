@@ -40,7 +40,7 @@ const NewsBox = ({ newsItems }) => {
                 <a
                     href={item.link}
                     key={index}
-                    className="group flex flex-col shadow-lg rounded-2xl w-full lg:min-h-0 lg:w-[1000px] lg:h-[259px] cursor-pointer lg:flex-row border-2 border-solid border-gray-200 bg-white transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:border-indigo-900 overflow-hidden"
+                    className="group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border-2 border-solid border-gray-200 bg-brand-paper shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-indigo-900 hover:shadow-2xl lg:h-[259px] lg:min-h-0 lg:w-[1000px] lg:flex-row"
                 >
                     <div className="w-full aspect-[16/9] lg:w-[450px] lg:h-[255px] overflow-hidden">
                         <img
@@ -49,9 +49,9 @@ const NewsBox = ({ newsItems }) => {
                             alt={`News ${index}`}
                         />
                     </div>
-                    <div className="w-full lg:w-[550px] flex items-center bg-white transition-all duration-300">
-                        <div className="mb-2 mt-2 ml-3 lg:ml-5 lg:mb-0">
-                            <h1 className="font-bold uppercase text-2xl lg:text-3xl mr-5 text-gray-900">{item.title}</h1>
+                    <div className="flex w-full items-center bg-brand-paper transition-all duration-300 lg:w-[550px]">
+                        <div className="mb-2 ml-3 mt-2 lg:mb-0 lg:ml-5">
+                            <h1 className="mr-5 text-2xl font-bold uppercase text-gray-900 lg:text-3xl">{item.title}</h1>
                             <div className="flex items-center gap-2 mt-2 lg:mt-1">
                                 <div className="w-2 h-2 bg-indigo-900 rounded-full"></div>
                                 <h1 className="text-indigo-900 font-bold text-sm">{formatDate(item.date)}</h1>

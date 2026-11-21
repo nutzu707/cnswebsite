@@ -10,7 +10,7 @@ const CreateProjectJsonFile = () => {
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [link, setLink] = useState('');
-    const [color, setColor] = useState('#312e81');
+    const [color, setColor] = useState('#2E3171');
     const [uploading, setUploading] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -45,7 +45,7 @@ const CreateProjectJsonFile = () => {
             setPhotoFile(null);
             setPhotoPreview(null);
             setLink('');
-            setColor('#312e81');
+            setColor('#2E3171');
             if (fileRef.current) fileRef.current.value = '';
             window.dispatchEvent(new CustomEvent('dashboard-projects-changed'));
         } catch (error) {

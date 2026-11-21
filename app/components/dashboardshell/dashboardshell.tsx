@@ -105,7 +105,7 @@ const ALL_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
 
 function Panel({ children }: { children: React.ReactNode }) {
     return (
-        <div className="animate-fadeIn rounded-2xl border border-indigo-900/10 bg-white p-4 sm:p-6 lg:p-8 shadow-sm">
+        <div className="animate-fadeIn rounded-2xl border border-indigo-900/10 bg-brand-paper p-4 sm:p-6 lg:p-8 shadow-sm">
             {children}
         </div>
     );
@@ -148,7 +148,7 @@ export default function DashboardShell() {
                                         key={item.id}
                                         type="button"
                                         onClick={() => selectSection(item.id)}
-                                        className="group text-left rounded-2xl border border-indigo-900/10 bg-white p-5 shadow-sm hover:border-indigo-900/30 hover:shadow-md transition-all"
+                                        className="group text-left rounded-2xl border border-indigo-900/10 bg-brand-paper p-5 shadow-sm hover:border-indigo-900/30 hover:shadow-md transition-all"
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-900 group-hover:bg-indigo-900 group-hover:text-white transition-colors">
@@ -313,9 +313,9 @@ export default function DashboardShell() {
     );
 
     return (
-        <div className="min-h-screen bg-[#f5f7fb] pt-[88px]">
+        <div className="min-h-screen bg-brand-cream pt-[88px]">
             <div className="flex min-h-[calc(100vh-88px)] w-full">
-                <aside className="hidden lg:flex sticky top-[88px] h-[calc(100vh-88px)] w-[280px] shrink-0 flex-col border-r border-indigo-900/10 bg-white">
+                <aside className="hidden lg:flex sticky top-[88px] h-[calc(100vh-88px)] w-[280px] shrink-0 flex-col border-r border-indigo-900/10 bg-brand-paper">
                     {sidebarContent}
                 </aside>
 
@@ -327,7 +327,7 @@ export default function DashboardShell() {
                             aria-label="Închide meniul"
                             onClick={() => setSidebarOpen(false)}
                         />
-                        <aside className="absolute left-0 top-0 h-full w-[300px] bg-white shadow-2xl">
+                        <aside className="absolute left-0 top-0 h-full w-[300px] bg-brand-paper shadow-2xl">
                             <div className="flex items-center justify-between border-b border-indigo-900/10 px-4 py-3">
                                 <p className="font-bold text-indigo-900">Meniu</p>
                                 <button
@@ -344,11 +344,11 @@ export default function DashboardShell() {
                 )}
 
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <header className="sticky top-[88px] z-40 border-b border-indigo-900/10 bg-[#f5f7fb]/95 backdrop-blur">
+                    <header className="sticky top-[88px] z-40 border-b border-indigo-900/10 bg-brand-cream/95 backdrop-blur">
                         <div className="flex items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
                             <button
                                 type="button"
-                                className="lg:hidden rounded-xl border border-indigo-900/10 bg-white p-2.5 shadow-sm"
+                                className="lg:hidden rounded-xl border border-indigo-900/10 bg-brand-paper p-2.5 shadow-sm"
                                 onClick={() => setSidebarOpen(true)}
                             >
                                 <Menu className="h-5 w-5 text-indigo-900" />

@@ -41,7 +41,7 @@ const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) =>
 
     if (loading) {
         return (
-            <div className="rounded-2xl border border-indigo-900/10 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-indigo-900/10 bg-brand-paper p-5 shadow-sm">
                 <p className="text-sm text-gray-600">Se încarcă stocarea...</p>
             </div>
         );
@@ -58,7 +58,7 @@ const BlobStorageIndicator = ({ compact = false }: BlobStorageIndicatorProps) =>
     };
 
     return (
-        <div className="rounded-2xl border border-indigo-900/10 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-indigo-900/10 bg-brand-paper p-5 shadow-sm">
             <div className={`flex ${compact ? "flex-col gap-4" : "flex-col lg:flex-row lg:items-center"} gap-4`}>
                 <div className="flex-1">
                     <h3 className="text-lg font-bold text-indigo-900">Stocare</h3>

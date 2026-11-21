@@ -68,7 +68,7 @@ const ConsiliuProfesoral = () => {
                     <button
                         type="button"
                         onClick={() => setLightboxOpen(true)}
-                        className="group relative block w-full overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-900 focus-visible:ring-offset-2"
+                        className="group relative block w-full overflow-hidden rounded-2xl border-2 border-gray-200 bg-brand-paper shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-900 focus-visible:ring-offset-2"
                         aria-label="Mărește fotografia consiliului profesoral"
                     >
                         <img
@@ -89,7 +89,7 @@ const ConsiliuProfesoral = () => {
                     </figcaption>
                 </figure>
 
-                <ul className="mt-10 lg:mt-14 self-center shadow-lg bg-white lg:p-8 p-4 rounded-2xl w-full lg:w-[1000px] border-2 border-gray-200">
+                <ul className="mt-10 lg:mt-14 self-center shadow-lg bg-brand-paper lg:p-8 p-4 rounded-2xl w-full lg:w-[1000px] border-2 border-gray-200">
                     <div
                         className="animate-fadeIn opacity-0"
                         style={{ animationDelay: `0ms` }}
@@ -138,7 +138,7 @@ const ConsiliuProfesoral = () => {
                     <button
                         type="button"
                         onClick={() => setLightboxOpen(false)}
-                        className="absolute right-4 top-4 z-[101] rounded-full bg-white/95 p-2 text-indigo-900 shadow-lg transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="absolute right-4 top-4 z-[101] rounded-full bg-brand-paper/95 p-2 text-indigo-900 shadow-lg transition hover:bg-brand-paper focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                         aria-label="Închide fotografia"
                     >
                         <X className="h-6 w-6" />
@@ -153,7 +153,7 @@ const ConsiliuProfesoral = () => {
                             alt={GROUP_PHOTO_ALT}
                             width={1024}
                             height={680}
-                            className="mx-auto h-auto w-full max-w-none object-contain sm:min-w-[900px]"
+                            className="mx-auto h-auto w-full max-w-none object-contain md:min-w-[900px]"
                         />
                     </div>
                 </div>,

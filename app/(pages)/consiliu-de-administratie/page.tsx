@@ -62,12 +62,12 @@ export default function ConsiliuDeAdministratie() {
                             >
                                 <div className="relative w-[300px] h-[300px] mx-auto mb-6">
                                     <img
-                                        className="w-full h-full rounded-full border-2 border-gray-300 object-cover shadow-xl"
+                                        className="w-full h-full rounded-full border-2 border-gray-200 object-cover shadow-xl"
                                         src={person.photo}
                                         alt={person.name}
                                     />
                                 </div>
-                                <h3 className="font-bold text-2xl lg:text-3xl uppercase text-gray-900 mb-2">
+                                <h3 className="mb-2 text-2xl font-bold uppercase text-gray-900 lg:text-3xl">
                                     {person.name}
                                 </h3>
                                 <p className="font-bold text-xl text-indigo-900 uppercase">

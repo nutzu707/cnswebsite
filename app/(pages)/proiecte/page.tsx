@@ -59,7 +59,7 @@ export default function Proiecte() {
                     </div>
                 ) : projects.length === 0 ? (
                     <div className="text-center mt-16 lg:mt-24">
-                        <div className="bg-white border-2 border-indigo-900 rounded-2xl p-12 max-w-md mx-auto shadow-lg">
+                        <div className="bg-brand-paper border-2 border-indigo-900 rounded-2xl p-12 max-w-md mx-auto shadow-lg">
                             <p className="text-2xl font-bold text-indigo-900">Nu există proiecte momentan</p>
                             <p className="text-gray-700 mt-2">Reveniți mai târziu pentru noutăți!</p>
                         </div>

@@ -49,14 +49,14 @@ export default function Catedre() {
                     </div>
                 ) : photos.length === 0 ? (
                     <div className="text-center mt-16 lg:mt-24">
-                        <div className="bg-white border-2 border-indigo-900 rounded-2xl p-12 max-w-md mx-auto shadow-lg">
+                        <div className="bg-brand-paper border-2 border-indigo-900 rounded-2xl p-12 max-w-md mx-auto shadow-lg">
                             <p className="text-2xl font-bold text-indigo-900">Nu sunt fotografii disponibile</p>
                         </div>
                     </div>
                 ) : (
                     photos.map((photo, index) => (
                         <div key={photo.pathname} className={index === 0 ? "mt-16 lg:mt-24" : "lg:mt-16 mt-8"}>
-                            <h1 className="lg:hidden block text-center text-2xl font-bold text-indigo-900 mb-4">{photo.label}</h1>
+                            <h1 className="mb-4 block text-center text-2xl font-bold text-gray-900 lg:hidden">{photo.label}</h1>
                             <div className="w-full relative aspect-[1400/500]">
                                 <img 
                                     src={photo.url} 
@@ -64,7 +64,7 @@ export default function Catedre() {
                                     className="absolute top-0 left-0 w-full h-full object-cover rounded-2xl border-2 border-gray-200 shadow-lg" 
                                 />
                                 <div className="absolute inset-x-0 justify-center lg:items-end items-start bottom-0 lg:pb-4 pt-2 hidden lg:flex">
-                                    <span className="bg-white lg:text-5xl text-xl font-bold lg:p-4 p-2 rounded-xl border-2 border-gray-200 shadow-lg text-indigo-900">
+                                    <span className="bg-brand-paper lg:text-5xl text-xl font-bold lg:p-4 p-2 rounded-xl border-2 border-gray-200 shadow-lg text-indigo-900">
                                         {photo.label}
                                     </span>
                                 </div>

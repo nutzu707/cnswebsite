@@ -11,7 +11,7 @@ export default function EleviDocumente() {
         <div>
             <PageBody>
                 <PageTitle text="DOCUMENTE ELEVI"></PageTitle>
-                <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-lg bg-white p-6 lg:p-8 rounded-2xl border-2 border-gray-200">
+                <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-lg bg-brand-paper p-6 lg:p-8 rounded-2xl border-2 border-gray-200">
                     <DocumentsListBlobPublic folder="documents/documente-elevi" />
                 </div>
                 <Footer/>

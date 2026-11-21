@@ -22,7 +22,7 @@ export default function Examene() {
         <div>
             <PageBody>
                 <PageTitle text="EXAMENE ȘI CONCURSURI"/>
-                <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-lg bg-white p-6 lg:p-8 rounded-2xl border-2 border-gray-200">
+                <div className="lg:w-[1000px] w-full self-center mt-16 lg:mt-24 shadow-lg bg-brand-paper p-6 lg:p-8 rounded-2xl border-2 border-gray-200">
 
                     <h2 className="text-3xl lg:text-4xl font-bold text-indigo-900 mb-6">Examene</h2>
                     <hr className="border-t-2 border-gray-200" />

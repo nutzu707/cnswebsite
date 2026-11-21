@@ -32,7 +32,7 @@ const FaqItem: React.FC<FaqItemProps> = ({ title, content }) => {
         <p className="text-xl">{content}</p>
       </div>
 
-      <hr className="border-t-2 mt-2" />
+      <hr className="mt-2 border-t-2 border-gray-200" />
     </div>
   );
 };

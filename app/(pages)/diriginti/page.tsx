@@ -37,7 +37,7 @@ const DirigintiPage = () => {
             <PageBody>
                 <PageTitle text="DIRIGINTI"></PageTitle>
 
-                <div className="mt-16 lg:mt-24 self-center shadow-lg bg-white lg:p-8 p-4 rounded-2xl w-full lg:w-[1000px] border-2 border-gray-200">
+                <div className="mt-16 lg:mt-24 self-center shadow-lg bg-brand-paper lg:p-8 p-4 rounded-2xl w-full lg:w-[1000px] border-2 border-gray-200">
                     <div
                         className="animate-fadeIn opacity-0"
                         style={{ animationDelay: `0ms` }}

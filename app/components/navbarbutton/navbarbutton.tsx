@@ -15,7 +15,7 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
         return (
             <div className="inline-block">
                 <Link href={link} passHref>
-                    <button className="text-black px-2 py-0.5 rounded-md hover:bg-gray-200 flex items-center font-bold text-xl">
+                    <button className="flex items-center rounded-md px-2 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100">
                         {title}
                     </button>
                 </Link>
@@ -25,19 +25,19 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
 
     if (options && options.length > 0) {
         return (
-            <div className="relative inline-block group">
-                <button className="text-black px-2 py-0.5 rounded-md hover:bg-gray-200 flex items-center font-bold text-xl">
+            <div className="group relative inline-block">
+                <button className="flex items-center rounded-md px-2 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100">
                     {title}
                 </button>
 
-                <div className="absolute  left-0 p-1 bg-white border-2 shadow-2xl opacity-0 transform scale-y-0 origin-top transition-all duration-150 ease-out group-hover:opacity-100 group-hover:scale-y-100 rounded-xl">
+                <div className="absolute left-0 z-50 origin-top scale-y-0 transform rounded-xl border-2 border-gray-200 bg-brand-paper p-1 opacity-0 shadow-2xl transition-all duration-150 ease-out group-hover:scale-y-100 group-hover:opacity-100">
                     <ul>
                         {options.map((option, index) => {
                             const isExternal = option.link.startsWith('http');
                             return (
                                 <li
                                     key={index}
-                                    className=" px-2 hover:bg-gray-100 cursor-pointer font-bold text-xl rounded-md whitespace-nowrap "
+                                    className="cursor-pointer whitespace-nowrap rounded-md px-2 text-xl font-bold text-black hover:bg-gray-100"
                                 >
                                     {isExternal ? (
                                         <a href={option.link} target="_blank" rel="noopener noreferrer" className="block">
@@ -59,7 +59,7 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
 
     return (
         <div className="inline-block">
-            <button className="text-black px-2 py-0.5 rounded-md hover:bg-gray-200 flex items-center font-bold text-xl">
+            <button className="flex items-center rounded-md px-2 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100">
                 {title}
             </button>
         </div>
@@ -67,4 +67,3 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
 };
 
 export default NavbarButton;
-

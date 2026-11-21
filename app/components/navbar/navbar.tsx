@@ -1,39 +1,59 @@
-"use client"
+"use client";
 
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import NavbarButton from "@/app/components/navbarbutton/navbarbutton";
-import {Button} from "@/components/ui/button";
-import { useState, useEffect  } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
+import NavbarButton from "@/app/components/navbarbutton/navbarbutton";
+import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 
 const Navbar: React.FC = () => {
     const pathname = usePathname();
-    const [navbarLinks, setNavbarLinks] = useState({
-        orar: "",
-    });
+    const [navbarLinks, setNavbarLinks] = useState({ orar: "" });
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [expandedSection, setExpandedSection] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+    let zoomlvl = 100;
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         const fetchNavbarConfig = async () => {
             try {
-                const response = await fetch('/api/navbar-links');
+                const response = await fetch("/api/navbar-links");
                 if (response.ok) {
                     const data = await response.json();
                     setNavbarLinks({ orar: data.orar || "" });
                 }
             } catch (error) {
-                console.error('Error loading navbar config:', error);
+                console.error("Error loading navbar config:", error);
             }
         };
         fetchNavbarConfig();
     }, []);
 
+    useEffect(() => {
+        setIsMenuOpen(false);
+        setExpandedSection(null);
+    }, [pathname]);
+
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [isMenuOpen]);
+
     const managementOptions = [
         { title: "Documente", link: "/management-documente" },
         { title: "Conducere", link: "/conducere" },
         { title: "Consiliu de Administratie", link: "/consiliu-de-administratie" },
-
     ];
     const eleviOptions = [
         { title: "Documente", link: "/elevi-documente" },
@@ -46,248 +66,269 @@ const Navbar: React.FC = () => {
         { title: "Consiliu Profesoral", link: "/consiliu-profesoral" },
         { title: "Catedre", link: "/catedre" },
         { title: "Diriginti", link: "/diriginti" },
-
     ];
-    var zoomlvl = 100;
 
-    function zoomIn() {
-        if(zoomlvl<150)
-        zoomlvl += 10;
+    const zoomIn = () => {
+        if (zoomlvl < 150) zoomlvl += 10;
         document.body.style.zoom = zoomlvl + "%";
-    }
+    };
 
-    function zoomOut() {
-        if(zoomlvl>100)
-        zoomlvl -= 10;
+    const zoomOut = () => {
+        if (zoomlvl > 100) zoomlvl -= 10;
         document.body.style.zoom = zoomlvl + "%";
-    }
-
-
-
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    const toggleMenu = () => {
-        setIsMenuOpen((prevState) => !prevState);
     };
 
     const closeMenu = () => {
         setIsMenuOpen(false);
+        setExpandedSection(null);
     };
-
-    useEffect(() => {
-        setIsMenuOpen(false);
-    }, [pathname]);
-
-
-    const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
     const toggleSection = (section: string) => {
         setExpandedSection((prev) => (prev === section ? null : section));
     };
 
-
-
-
-
-    return (
-        <div className="p-4 border-b-[#E5E7EB] border-solid border-b-2 flex fixed bg-white w-full items-center z-50 ">
-
-    
-          
-            
-            <div className=" w-full lg:justify-center items-center flex">
-                <div className="z-50 ">
+    const mobileMenu =
+        mounted &&
+        createPortal(
+            <div
+                className={`fixed inset-0 z-[60] bg-brand-cream transition-transform duration-300 ease-out lg:hidden ${
+                    isMenuOpen ? "translate-x-0" : "pointer-events-none translate-x-full"
+                }`}
+                aria-hidden={!isMenuOpen}
+            >
+                <div className="flex h-16 items-center justify-between border-b-2 border-gray-200 px-4">
                     <Link href="/" onClick={closeMenu}>
                         <Image
                             src="/websiteUI/logo.png"
                             alt="Logo"
-                            width={64}
-                            height={64}
-                            className="min-w-10 w-4 p-0 mr-5 -mb-2"
-                            style={{ imageRendering: 'crisp-edges' }}
+                            width={48}
+                            height={48}
+                            className="h-12 w-12 object-contain"
+                            style={{ imageRendering: "crisp-edges" }}
                         />
                     </Link>
+                    <button
+                        type="button"
+                        onClick={closeMenu}
+                        className="rounded-md p-2 text-black hover:bg-gray-100"
+                        aria-label="Închide meniul"
+                    >
+                        <X className="h-7 w-7" />
+                    </button>
                 </div>
-                <div className="hidden lg:flex">
-                    <NavbarButton title="PREZENTARE" link="/prezentare" />
-                    <NavbarButton title="MANAGEMENT" options={managementOptions} />
-                    <NavbarButton title="ELEVI" options={eleviOptions} />
-                    <NavbarButton title="PROFESORI" options={profesoriOptions} />
-                    <NavbarButton title="EXAMENE" link="/examene" />
-                    <NavbarButton title="PROIECTE" link="/proiecte" />
-                    <NavbarButton title="CONTACT" link="/contact" />
-                </div>
-            </div>
 
-          
-            <div className="hidden lg:flex items-center absolute right-4">
+                <nav className="h-[calc(100%-4rem)] overflow-y-auto px-6 py-8 text-3xl font-bold text-black">
+                    <Link href="/prezentare" onClick={closeMenu} className="block py-1">
+                        Prezentare
+                    </Link>
 
-        
-                <div className="ml-auto flex items-center relative group ">
-                    <Image
-                        className="w-8 h-5 shadow-2xl rounded-md mt-1.5 ml-2 mr-2 cursor-pointer"
-                        src="/websiteUI/Accessibility%20Icon_final.svg"
-                        alt="accessibility_icon"
-                        width={32}
-                        height={20}
-                    />
-                    
-                    <div className="absolute top-[27px] right-0 bg-white  hidden group-hover:flex flex-col  shadow-lg p-1 rounded-xl border-2 transition-all duration-75 ease-out transform opacity-0 translate-x-full group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-y-100">
-                        <Button onClick={zoomIn} className="h-7 bg-white text-black hover:bg-gray-100 cursor-pointer font-bold text-xl rounded-md whitespace-nowrap">
-                            Mareste Text
-                        </Button>
-                        <Button onClick={zoomOut} className="h-7 bg-white text-black hover:bg-gray-100 cursor-pointer font-bold text-xl rounded-md whitespace-nowrap">
-                            Micsoreaza Text
-                        </Button>
-                        <Button className="h-7 bg-white text-black hover:bg-gray-100 cursor-pointer font-bold text-xl rounded-md whitespace-nowrap hidden">
-                            Contrast
-                        </Button>
+                    <button
+                        type="button"
+                        className="block w-full py-1 text-left"
+                        onClick={() => toggleSection("management")}
+                    >
+                        Management
+                    </button>
+                    <div
+                        className={`overflow-hidden text-xl font-bold transition-[max-height] duration-300 ${
+                            expandedSection === "management" ? "max-h-60" : "max-h-0"
+                        }`}
+                    >
+                        <div className="space-y-1 pb-2 pl-3">
+                            <Link href="/management-documente" onClick={closeMenu} className="block">
+                                Documente
+                            </Link>
+                            <Link href="/conducere" onClick={closeMenu} className="block">
+                                Conducere
+                            </Link>
+                            <Link href="/consiliu-de-administratie" onClick={closeMenu} className="block">
+                                Consiliu de Administratie
+                            </Link>
+                        </div>
                     </div>
-                    
 
-
-                </div>
-                <div className="flex items-center relative group bg-none">
-                    <Image
-                        className="w-8 h-5 shadow-2xl rounded-md mt-1.5 ml-2 z-30 b mr-2 cursor-pointer border"
-                        src="/websiteUI/flag_of_romania.webp"
-                        alt="ro_flag"
-                        width={32}
-                        height={20}
-                    />
-                    <div className="absolute top-3  ml-2 h-10 rounded-md hidden z-10 bg-[#FBFBFB] group-hover:flex flex-col  shadow-lg transition-all duration-75 ease-out transform opacity-0 translate-x-full group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-y-100">
-                        <a href="https://cnszalau.ro/hu/" className="mt-auto ">
-                        <Image
-                            className="cursor-pointer w-8 h-5 shadow-2xl rounded-md border "
-                            src="/websiteUI/Flag-Hungary.png"
-                            alt="hu_flag"
-                            width={32}
-                            height={20}
-                        />
-                        </a>
+                    <button
+                        type="button"
+                        className="block w-full py-1 text-left"
+                        onClick={() => toggleSection("elevi")}
+                    >
+                        Elevi
+                    </button>
+                    <div
+                        className={`overflow-hidden text-xl font-bold transition-[max-height] duration-300 ${
+                            expandedSection === "elevi" ? "max-h-60" : "max-h-0"
+                        }`}
+                    >
+                        <div className="space-y-1 pb-2 pl-3">
+                            <Link href="/elevi-documente" onClick={closeMenu} className="block">
+                                Documente
+                            </Link>
+                            {navbarLinks.orar && (
+                                <a
+                                    href={navbarLinks.orar}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={closeMenu}
+                                    className="block"
+                                >
+                                    Orar
+                                </a>
+                            )}
+                            <Link href="/premii" onClick={closeMenu} className="block">
+                                Premii
+                            </Link>
+                            <Link href="/cjex-salaj" onClick={closeMenu} className="block">
+                                CJEX Sălaj
+                            </Link>
+                        </div>
                     </div>
-                </div>
 
-            </div>
-           
-            <div className="flex lg:hidden mr-0 ml-auto ">
-                <button
-                    className={`transition-transform duration-300 ease-in-out ${
-                        isMenuOpen ? "rotate-90" : "rotate-0"
-                    }`}
-                    onClick={toggleMenu}
-                    style={{ zIndex: 999 }} // Ensure it stays on top of other content
-                >
-                    <Image src="/websiteUI/burger-menu-icon.svg" alt="BurgerIcon" width={24} height={24} />
-                </button>
-                <div
-                    className={`fixed top-0 left-0 w-full flex h-full z-10 bg-white transition-all duration-500 transform ${
-                        isMenuOpen ? "translate-x-0 opacity-100 pointer-events-auto" : "translate-x-full opacity-100 pointer-events-none"
-                    }`}
-                    onClick={(event) => {
-                        const anchor = (event.target as HTMLElement).closest("a");
-                        if (anchor) closeMenu();
-                    }}
-                >
-                    <div className="content-center ml-8 text-3xl font-bold h-full">
-                       <Link href="/prezentare"><p>Prezentare</p></Link>
-
-                        <p
-                            className="cursor-pointer"
-                            onClick={() => toggleSection("management")}
-                        >
-                            Management
-                        </p>
-                        <div
-                            className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${
-                                expandedSection === "management" ? "max-h-[500px]" : "max-h-0"
-                            }`}
-                        >
-                            <div className="text-xl">
-                               <Link href="/management-documente"><p>Documente</p></Link>
-                               <Link href="/conducere"><p>Conducere</p></Link>
-                               <Link href="/consiliu-de-administratie"><p>Consiliu de Administratie</p></Link>
-                            </div>
+                    <button
+                        type="button"
+                        className="block w-full py-1 text-left"
+                        onClick={() => toggleSection("profesori")}
+                    >
+                        Profesori
+                    </button>
+                    <div
+                        className={`overflow-hidden text-xl font-bold transition-[max-height] duration-300 ${
+                            expandedSection === "profesori" ? "max-h-72" : "max-h-0"
+                        }`}
+                    >
+                        <div className="space-y-1 pb-2 pl-3">
+                            <Link href="/profesori-documente" onClick={closeMenu} className="block">
+                                Documente
+                            </Link>
+                            <Link href="/consiliu-profesoral" onClick={closeMenu} className="block">
+                                Consiliu Profesoral
+                            </Link>
+                            <Link href="/catedre" onClick={closeMenu} className="block">
+                                Catedre
+                            </Link>
+                            <Link href="/diriginti" onClick={closeMenu} className="block">
+                                Diriginti
+                            </Link>
                         </div>
+                    </div>
 
-                        <p
-                            className="cursor-pointer"
-                            onClick={() => toggleSection("elevi")}
-                        >
-                            Elevi
-                        </p>
-                        <div
-                            className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${
-                                expandedSection === "elevi" ? "max-h-[500px]" : "max-h-0"
-                            }`}
-                        >
-                            <div className="text-xl">
-                                <Link href="/elevi-documente"><p>Documente</p></Link>
-                                {navbarLinks.orar && <a href={navbarLinks.orar} target="_blank" rel="noopener noreferrer"><p>Orar</p></a>}
-                                <Link href="/premii"><p>Premii</p></Link>
-                                <Link href="/cjex-salaj"><p>CJEX Sălaj</p></Link>
-                            </div>
-                        </div>
+                    <Link href="/examene" onClick={closeMenu} className="block py-1">
+                        Examene
+                    </Link>
+                    <Link href="/proiecte" onClick={closeMenu} className="block py-1">
+                        Proiecte
+                    </Link>
+                    <Link href="/contact" onClick={closeMenu} className="block py-1">
+                        Contact
+                    </Link>
 
-                        <p
-                            className="cursor-pointer"
-                            onClick={() => toggleSection("profesori")}
-                        >
-                            Profesori
-                        </p>
-                        <div
-                            className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${
-                                expandedSection === "profesori" ? "max-h-[500px]" : "max-h-0"
-                            }`}
-                        >
-                            <div className="text-xl">
-                                <Link href="/profesori-documente"><p>Documente</p></Link>
-                                <Link href="/consiliu-profesoral"><p>Consiliu Profesoral</p></Link>
-                                <Link href="/catedre"><p>Catedre</p></Link>
-                                <Link href="/diriginti"><p>Diriginti</p></Link>
-                            </div>
-                        </div>
-
-                        <Link href="/examene"><p>Examene</p></Link>
-                        <Link href="/proiecte"><p>Proiecte</p></Link>
-                        <Link href="/contact"><p>Contact</p></Link>
-
-
-
-
-                        <div className="flex mt-2">
-
+                    <div className="mt-6 flex items-center gap-3">
                         <Image
-                            className="cursor-pointer w-8 h-5 shadow-2xl rounded-md border "
-                            onClick={() => toggleSection("steag")}
+                            className="h-5 w-8 rounded-md border shadow"
                             src="/websiteUI/flag_of_romania.webp"
                             alt="ro_flag"
                             width={32}
                             height={20}
                         />
-
-                        <a href="https://cnszalau.ro/hu/">
-                        <div
-                            className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${
-                                expandedSection === "steag" ? "max-h-[500px]" : "max-h-0"
-                            }`}
-                        >
+                        <a href="https://cnszalau.ro/hu/" onClick={closeMenu}>
                             <Image
-                                className="cursor-pointer w-8 h-5 shadow-2xl rounded-md border ml-2 "
+                                className="h-5 w-8 rounded-md border shadow"
                                 src="/websiteUI/Flag-Hungary.png"
                                 alt="hu_flag"
                                 width={32}
                                 height={20}
                             />
-                        </div>
                         </a>
-                        </div>
-
                     </div>
-                </div>
+                </nav>
+            </div>,
+            document.body
+        );
 
-            </div>
-        </div>
+    return (
+        <>
+            <header className="fixed inset-x-0 top-0 z-50 border-b-2 border-gray-200 bg-brand-cream">
+                <div className="relative flex w-full items-center p-4">
+                    <div className="flex w-full items-center lg:justify-center">
+                        <Link href="/" onClick={closeMenu} className="z-50 shrink-0">
+                            <Image
+                                src="/websiteUI/logo.png"
+                                alt="Logo"
+                                width={64}
+                                height={64}
+                                className="-mb-2 mr-5 min-w-10 w-4 p-0"
+                                style={{ imageRendering: "crisp-edges" }}
+                            />
+                        </Link>
+                        <div className="hidden lg:flex">
+                            <NavbarButton title="PREZENTARE" link="/prezentare" />
+                            <NavbarButton title="MANAGEMENT" options={managementOptions} />
+                            <NavbarButton title="ELEVI" options={eleviOptions} />
+                            <NavbarButton title="PROFESORI" options={profesoriOptions} />
+                            <NavbarButton title="EXAMENE" link="/examene" />
+                            <NavbarButton title="PROIECTE" link="/proiecte" />
+                            <NavbarButton title="CONTACT" link="/contact" />
+                        </div>
+                    </div>
+
+                    <div className="absolute right-4 hidden items-center lg:flex">
+                        <div className="group relative ml-auto flex items-center">
+                            <Image
+                                className="mr-2 mt-1.5 h-5 w-8 cursor-pointer rounded-md shadow"
+                                src="/websiteUI/Accessibility%20Icon_final.svg"
+                                alt="accessibility_icon"
+                                width={32}
+                                height={20}
+                            />
+                            <div className="absolute right-0 top-[27px] hidden translate-x-full flex-col rounded-xl border-2 border-gray-200 bg-brand-paper p-1 opacity-0 shadow-lg transition-all duration-75 group-hover:flex group-hover:translate-x-0 group-hover:opacity-100">
+                                <Button
+                                    onClick={zoomIn}
+                                    className="h-7 cursor-pointer whitespace-nowrap rounded-md bg-brand-paper text-xl font-bold text-black hover:bg-gray-100"
+                                >
+                                    Mareste Text
+                                </Button>
+                                <Button
+                                    onClick={zoomOut}
+                                    className="h-7 cursor-pointer whitespace-nowrap rounded-md bg-brand-paper text-xl font-bold text-black hover:bg-gray-100"
+                                >
+                                    Micsoreaza Text
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="group relative flex items-center">
+                            <Image
+                                className="z-30 ml-2 mr-2 mt-1.5 h-5 w-8 cursor-pointer rounded-md border shadow"
+                                src="/websiteUI/flag_of_romania.webp"
+                                alt="ro_flag"
+                                width={32}
+                                height={20}
+                            />
+                            <div className="absolute top-3 z-10 ml-2 hidden h-10 translate-x-full flex-col rounded-md bg-brand-paper opacity-0 shadow-lg transition-all duration-75 group-hover:flex group-hover:translate-x-0 group-hover:opacity-100">
+                                <a href="https://cnszalau.ro/hu/" className="mt-auto">
+                                    <Image
+                                        className="h-5 w-8 cursor-pointer rounded-md border shadow"
+                                        src="/websiteUI/Flag-Hungary.png"
+                                        alt="hu_flag"
+                                        width={32}
+                                        height={20}
+                                    />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="ml-auto rounded-md p-2 text-black hover:bg-gray-100 lg:hidden"
+                        onClick={() => setIsMenuOpen(true)}
+                        aria-label="Deschide meniul"
+                        aria-expanded={isMenuOpen}
+                    >
+                        <Menu className="h-7 w-7" />
+                    </button>
+                </div>
+            </header>
+            {mobileMenu}
+        </>
     );
 };
 
