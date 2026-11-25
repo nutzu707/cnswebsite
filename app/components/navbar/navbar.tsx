@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import NavbarButton from "@/app/components/navbarbutton/navbarbutton";
+import SocialLinks from "@/app/components/sociallinks/sociallinks";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
@@ -221,6 +222,8 @@ const Navbar: React.FC = () => {
                         Contact
                     </Link>
 
+                    <SocialLinks className="mt-8 gap-4" iconClassName="h-10 w-10" />
+
                     <div className="mt-6 flex items-center gap-3">
                         <Image
                             className="h-5 w-8 rounded-md border shadow"
@@ -248,7 +251,8 @@ const Navbar: React.FC = () => {
         <>
             <header className="fixed inset-x-0 top-0 z-50 border-b-2 border-gray-200 bg-brand-cream">
                 <div className="relative flex w-full items-center p-4">
-                    <div className="flex w-full items-center lg:justify-center">
+                    <div className="hidden flex-1 lg:block" aria-hidden="true" />
+                    <div className="flex items-center lg:justify-center">
                         <Link href="/" onClick={closeMenu} className="z-50 shrink-0">
                             <Image
                                 src="/websiteUI/logo.png"
@@ -270,61 +274,66 @@ const Navbar: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="absolute right-4 hidden items-center lg:flex">
-                        <div className="group relative ml-auto flex items-center">
-                            <Image
-                                className="mr-2 mt-1.5 h-5 w-8 cursor-pointer rounded-md shadow"
-                                src="/websiteUI/Accessibility%20Icon_final.svg"
-                                alt="accessibility_icon"
-                                width={32}
-                                height={20}
-                            />
-                            <div className="absolute right-0 top-[27px] hidden translate-x-full flex-col rounded-xl border-2 border-gray-200 bg-brand-paper p-1 opacity-0 shadow-lg transition-all duration-75 group-hover:flex group-hover:translate-x-0 group-hover:opacity-100">
-                                <Button
-                                    onClick={zoomIn}
-                                    className="h-7 cursor-pointer whitespace-nowrap rounded-md bg-brand-paper text-xl font-bold text-black hover:bg-gray-100"
-                                >
-                                    Mareste Text
-                                </Button>
-                                <Button
-                                    onClick={zoomOut}
-                                    className="h-7 cursor-pointer whitespace-nowrap rounded-md bg-brand-paper text-xl font-bold text-black hover:bg-gray-100"
-                                >
-                                    Micsoreaza Text
-                                </Button>
+                    <div className="ml-auto flex flex-1 items-center justify-end">
+                        <SocialLinks
+                            className="mr-2 mt-1.5 hidden gap-1 lg:flex xl:gap-1.5"
+                            iconClassName="h-5 w-5 xl:h-6 xl:w-6"
+                        />
+                        <div className="hidden items-center lg:flex">
+                            <div className="group relative ml-auto flex items-center">
+                                <Image
+                                    className="mr-2 mt-1.5 h-5 w-8 cursor-pointer rounded-md shadow"
+                                    src="/websiteUI/Accessibility%20Icon_final.svg"
+                                    alt="accessibility_icon"
+                                    width={32}
+                                    height={20}
+                                />
+                                <div className="absolute right-0 top-[27px] hidden translate-x-full flex-col rounded-xl border-2 border-gray-200 bg-brand-paper p-1 opacity-0 shadow-lg transition-all duration-75 group-hover:flex group-hover:translate-x-0 group-hover:opacity-100">
+                                    <Button
+                                        onClick={zoomIn}
+                                        className="h-7 cursor-pointer whitespace-nowrap rounded-md bg-brand-paper text-xl font-bold text-black hover:bg-gray-100"
+                                    >
+                                        Mareste Text
+                                    </Button>
+                                    <Button
+                                        onClick={zoomOut}
+                                        className="h-7 cursor-pointer whitespace-nowrap rounded-md bg-brand-paper text-xl font-bold text-black hover:bg-gray-100"
+                                    >
+                                        Micsoreaza Text
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="group relative flex items-center">
+                                <Image
+                                    className="z-30 ml-2 mr-2 mt-1.5 h-5 w-8 cursor-pointer rounded-md border shadow"
+                                    src="/websiteUI/flag_of_romania.webp"
+                                    alt="ro_flag"
+                                    width={32}
+                                    height={20}
+                                />
+                                <div className="absolute top-3 z-10 ml-2 hidden h-10 translate-x-full flex-col rounded-md bg-brand-paper opacity-0 shadow-lg transition-all duration-75 group-hover:flex group-hover:translate-x-0 group-hover:opacity-100">
+                                    <a href="https://cnszalau.ro/hu/" className="mt-auto">
+                                        <Image
+                                            className="h-5 w-8 cursor-pointer rounded-md border shadow"
+                                            src="/websiteUI/Flag-Hungary.png"
+                                            alt="hu_flag"
+                                            width={32}
+                                            height={20}
+                                        />
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <div className="group relative flex items-center">
-                            <Image
-                                className="z-30 ml-2 mr-2 mt-1.5 h-5 w-8 cursor-pointer rounded-md border shadow"
-                                src="/websiteUI/flag_of_romania.webp"
-                                alt="ro_flag"
-                                width={32}
-                                height={20}
-                            />
-                            <div className="absolute top-3 z-10 ml-2 hidden h-10 translate-x-full flex-col rounded-md bg-brand-paper opacity-0 shadow-lg transition-all duration-75 group-hover:flex group-hover:translate-x-0 group-hover:opacity-100">
-                                <a href="https://cnszalau.ro/hu/" className="mt-auto">
-                                    <Image
-                                        className="h-5 w-8 cursor-pointer rounded-md border shadow"
-                                        src="/websiteUI/Flag-Hungary.png"
-                                        alt="hu_flag"
-                                        width={32}
-                                        height={20}
-                                    />
-                                </a>
-                            </div>
-                        </div>
+                        <button
+                            type="button"
+                            className="rounded-md p-2 text-black hover:bg-gray-100 lg:hidden"
+                            onClick={() => setIsMenuOpen(true)}
+                            aria-label="Deschide meniul"
+                            aria-expanded={isMenuOpen}
+                        >
+                            <Menu className="h-7 w-7" />
+                        </button>
                     </div>
-
-                    <button
-                        type="button"
-                        className="ml-auto rounded-md p-2 text-black hover:bg-gray-100 lg:hidden"
-                        onClick={() => setIsMenuOpen(true)}
-                        aria-label="Deschide meniul"
-                        aria-expanded={isMenuOpen}
-                    >
-                        <Menu className="h-7 w-7" />
-                    </button>
                 </div>
             </header>
             {mobileMenu}

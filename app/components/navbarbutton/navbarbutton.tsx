@@ -15,7 +15,7 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
         return (
             <div className="inline-block">
                 <Link href={link} passHref>
-                    <button className="flex items-center rounded-md px-2 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100">
+                    <button className="flex items-center rounded-md px-1 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100 xl:px-2">
                         {title}
                     </button>
                 </Link>
@@ -26,7 +26,7 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
     if (options && options.length > 0) {
         return (
             <div className="group relative inline-block">
-                <button className="flex items-center rounded-md px-2 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100">
+                <button className="flex items-center rounded-md px-1 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100 xl:px-2">
                     {title}
                 </button>
 
@@ -59,7 +59,7 @@ const NavbarButton: React.FC<Props> = ({ title, options, link }) => {
 
     return (
         <div className="inline-block">
-            <button className="flex items-center rounded-md px-2 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100">
+            <button className="flex items-center rounded-md px-1 py-0.5 text-xl font-bold text-black transition-colors hover:bg-gray-100 xl:px-2">
                 {title}
             </button>
         </div>
